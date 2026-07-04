@@ -258,6 +258,18 @@
     gap:10px;
     margin-bottom:8px;
   }
+  .ex-collapse-btn{
+    background:none;
+    border:none;
+    color:var(--olive);
+    font-size:11px;
+    cursor:pointer;
+    line-height:1;
+    padding:2px 2px 2px 0;
+    flex-shrink:0;
+    margin-top:1px;
+  }
+  .ex-collapse-btn:hover{color:var(--forest);}
   .ex-header-actions{
     display:flex;
     align-items:center;
@@ -1444,12 +1456,16 @@ function buildEditForm(d){
   `;
 }
 
+let collapseOverride = {};
+
 function calcSetCompletion(ex, sets, hasLog){
   const goal = parseGoal(ex.detail || "");
   if(!goal.sets || goal.sets <= 1) return null; // only meaningful for multi-set goals
-  const doneCount = hasLog ? (sets||[]).filter(s=>s.reps!==null && s.reps!==undefined || s.weight!==null && s.weight!==undefined).length : 0;
-  const percent = Math.min(100, Math.round((doneCount / goal.sets) * 100));
-  return {goalSets: goal.sets, doneSets: doneCount, percent};
+  const goalReps = goal.reps || 1;
+  const goalTotal = goal.sets * goalReps;
+  const doneTotal = hasLog ? (sets||[]).reduce((sum,s)=> sum + (s.reps || 0), 0) : 0;
+  const percent = goalTotal > 0 ? Math.round((doneTotal / goalTotal) * 100) : 0;
+  return {goalSets: goal.sets, goalReps, doneTotal, goalTotal, percent};
 }
 
 function buildExerciseBlock(ex, i, dayState, dayId, isExtra){
@@ -1460,6 +1476,9 @@ function buildExerciseBlock(ex, i, dayState, dayId, isExtra){
   const sets = hasLog ? (normalizeSets(weights[key]) || [{}]) : goalToSets(ex.detail || "");
   const goalClass = hasLog ? "" : " is-goal";
   const extraClass = isExtra ? " extra-exercise" : "";
+
+  const fullKey = dayId+"_"+key;
+  const isCollapsed = fullKey in collapseOverride ? collapseOverride[fullKey] : checked;
 
   const completion = isExtra ? null : calcSetCompletion(ex, sets, hasLog);
   let badgeHtml = "";
@@ -1472,6 +1491,7 @@ function buildExerciseBlock(ex, i, dayState, dayId, isExtra){
   let html = `<div class="ex-block${extraClass}">
     <div class="ex-header">
       <span class="checkbox ${checked?'checked':''}" data-day="${dayId}" data-idx="${key}"></span>
+      <button type="button" class="ex-collapse-btn" data-day="${dayId}" data-key="${key}" data-collapsed="${isCollapsed?1:0}" title="${isCollapsed?'Show sets':'Hide sets'}">${isCollapsed?'\u25B8':'\u25BE'}</button>
       <span class="ex-text ${checked?'done':''}">
         <span class="ex-name">${formatExName(ex.name)}</span>${ex.detail ? ` &mdash; <span class="ex-detail">${ex.detail}</span>` : ""}
       </span>
@@ -1479,20 +1499,23 @@ function buildExerciseBlock(ex, i, dayState, dayId, isExtra){
         ${badgeHtml}
         <button type="button" class="ex-remove-btn" data-day="${dayId}" data-key="${key}" data-extra="${isExtra?1:0}" title="Remove this exercise">&times;</button>
       </span>
-    </div>
-    <div class="set-table">
-      <div class="set-head"><span>Set</span><span>Reps</span><span>Weight</span></div>`;
-  sets.forEach((s, si)=>{
-    html += `<div class="set-row">
-      <span class="set-num">${si+1}</span>
-      <input type="text" inputmode="numeric" class="log-input set-input${goalClass}" data-day="${dayId}" data-key="${key}" data-si="${si}" data-field="reps" placeholder="\u2013" value="${escapeAttr(s.reps ?? "")}">
-      <input type="text" inputmode="decimal" class="log-input set-input${goalClass}" data-day="${dayId}" data-key="${key}" data-si="${si}" data-field="weight" placeholder="lb" value="${escapeAttr(s.weight ?? "")}">
-      <button type="button" class="set-remove-btn" data-day="${dayId}" data-key="${key}" data-si="${si}" title="Remove set">&times;</button>
     </div>`;
-  });
-  html += `</div>
-    <button type="button" class="btn add-set-btn" data-day="${dayId}" data-key="${key}">+ Add Set</button>
-  </div>`;
+
+  if(!isCollapsed){
+    html += `<div class="set-table">
+      <div class="set-head"><span>Set</span><span>Reps</span><span>Weight</span></div>`;
+    sets.forEach((s, si)=>{
+      html += `<div class="set-row">
+        <span class="set-num">${si+1}</span>
+        <input type="text" inputmode="numeric" class="log-input set-input${goalClass}" data-day="${dayId}" data-key="${key}" data-si="${si}" data-field="reps" placeholder="\u2013" value="${escapeAttr(s.reps ?? "")}">
+        <input type="text" inputmode="decimal" class="log-input set-input${goalClass}" data-day="${dayId}" data-key="${key}" data-si="${si}" data-field="weight" placeholder="lb" value="${escapeAttr(s.weight ?? "")}">
+        <button type="button" class="set-remove-btn" data-day="${dayId}" data-key="${key}" data-si="${si}" title="Remove set">&times;</button>
+      </div>`;
+    });
+    html += `</div>
+    <button type="button" class="btn add-set-btn" data-day="${dayId}" data-key="${key}">+ Add Set</button>`;
+  }
+  html += `</div>`;
   return html;
 }
 
@@ -1719,18 +1742,34 @@ function render(){
       e.stopPropagation();
       const day = cb.dataset.day;
       const key = cb.dataset.idx;
+      let newChecked;
       if(key.startsWith("x")){
         const xi = parseInt(key.slice(1));
         if(state[day].extras && state[day].extras[xi]){
           state[day].extras[xi].checked = !state[day].extras[xi].checked;
+          newChecked = state[day].extras[xi].checked;
         }
       } else {
         state[day].checks[key] = !state[day].checks[key];
+        newChecked = state[day].checks[key];
       }
+      collapseOverride[day+"_"+key] = !!newChecked;
       await saveState();
       render();
       openCard(day);
       renderTrail();
+    });
+  });
+
+  container.querySelectorAll(".ex-collapse-btn").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const day = btn.dataset.day;
+      const key = btn.dataset.key;
+      const wasCollapsed = btn.dataset.collapsed === "1";
+      collapseOverride[day+"_"+key] = !wasCollapsed;
+      render();
+      openCard(day);
     });
   });
 
