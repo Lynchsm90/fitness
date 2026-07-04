@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<title>Trailhead Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parchment:#F6F1E7;
+    --parchment-line:#E4D9BE;
+    --ink:#2B2E26;
+    --forest:#3F4F34;
+    --clay:#B5652B;
+    --olive:#8C7A54;
+    --tan:#D9CBA3;
+    --ok:#28A745;
+    --skip:#E23B2E;
+    --upcoming:#8C7A54;
+    --substituted:#28A745;
+    --substituted-accent:#B8862E;
+  }
+  *{box-sizing:border-box;}
+  html{
+    background:var(--parchment);
+    color-scheme:light only;
+  }
+  body{
+    margin:0;
+    background:var(--parchment) !important;
+    color:var(--ink);
+    font-family:'Source Sans 3', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .bg-layer{
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    background:var(--parchment);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(139,122,84,0.05) 0px, rgba(139,122,84,0.05) 1px, transparent 1px, transparent 80px),
+      repeating-linear-gradient(90deg, rgba(139,122,84,0.04) 0px, rgba(139,122,84,0.04) 1px, transparent 1px, transparent 80px);
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:36px 20px 80px;}
+
+  header{margin-bottom:28px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--olive);
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-optical-sizing:auto;
+    font-weight:700;
+    font-size:clamp(32px,7vw,46px);
+    margin:0 0 6px;
+    color:var(--forest);
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--ink); opacity:0.7; font-size:15px; max-width:52ch;}
+
+  /* Elevation profile progress bar */
+  .profile{
+    margin:28px 0 34px;
+    border:1px solid var(--parchment-line);
+    background:#fffdf8;
+    border-radius:4px;
+    padding:18px 16px 10px;
+  }
+  .profile-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--olive);
+    margin-bottom:10px;
+  }
+  svg.trail{width:100%; height:70px; display:block;}
+  .trail-path{fill:none; stroke:var(--tan); stroke-width:2;}
+  .marker{cursor:default;}
+  .marker circle{stroke:var(--parchment); stroke-width:3;}
+  .marker text{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9px;
+    fill:var(--ink);
+    text-anchor:middle;
+  }
+
+  /* Day cards */
+  .day{
+    border:1px solid var(--parchment-line);
+    background:#fffdf8;
+    border-radius:4px;
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+  .day.today-card{
+    box-shadow:0 0 0 2px var(--clay) inset;
+  }
+  .day-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 18px;
+    cursor:pointer;
+    gap:12px;
+  }
+  .day-head:hover{background:rgba(140,122,84,0.06);}
+  .day-name-wrap{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .day-name{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:19px;
+    color:var(--ink);
+  }
+  .day-focus-stack{display:flex; flex-direction:column; gap:1px;}
+  .day-focus{font-size:13px; color:var(--olive);}
+  .struck-focus{text-decoration:line-through; opacity:0.65;}
+  .actual-focus{color:var(--substituted-accent); font-weight:600; text-decoration:none;}
+  .status-pill{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:4px 9px;
+    border-radius:20px;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .status-completed{background:rgba(40,167,69,0.14); color:var(--ok);}
+  .status-skipped{background:rgba(226,59,46,0.14); color:var(--skip);}
+  .status-upcoming{background:rgba(140,122,84,0.13); color:var(--upcoming);}
+  .status-rest{background:rgba(140,122,84,0.08); color:var(--olive);}
+  .status-substituted{background:rgba(40,167,69,0.14); color:var(--ok);}
+
+  .head-right{display:flex; align-items:center; gap:10px; flex-shrink:0;}
+  .edit-toggle-btn{
+    background:none;
+    border:1px solid var(--parchment-line);
+    color:var(--olive);
+    border-radius:4px;
+    width:26px; height:26px;
+    font-size:13px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .edit-toggle-btn:hover{border-color:var(--olive); color:var(--forest);}
+
+  .edit-form{padding-top:2px;}
+  .edit-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--olive);
+    margin:10px 0 5px;
+  }
+  .edit-label:first-child{margin-top:0;}
+  .edit-input{
+    width:100%;
+    font-family:'Source Sans 3', sans-serif;
+    font-size:14px;
+    padding:8px 10px;
+    border:1px solid var(--parchment-line);
+    border-radius:4px;
+    background:var(--parchment);
+    color:var(--ink);
+    box-sizing:border-box;
+  }
+  .edit-input:focus{outline:none; border-color:var(--olive);}
+  .edit-checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13.5px;
+    margin-top:12px;
+    color:var(--ink);
+  }
+  .edit-ex-list{display:flex; flex-direction:column; gap:8px; margin-bottom:10px;}
+  .edit-ex-row{
+    display:grid;
+    grid-template-columns:1.1fr 1fr auto;
+    gap:6px;
+    align-items:center;
+  }
+  .edit-remove-btn{
+    background:none;
+    border:1px solid var(--parchment-line);
+    color:var(--skip);
+    border-radius:4px;
+    width:32px; height:32px;
+    font-size:16px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .edit-remove-btn:hover{border-color:var(--skip); background:rgba(226,59,46,0.08);}
+  .edit-actions{
+    display:flex;
+    gap:8px;
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px solid var(--parchment-line);
+  }
+  @media (max-width:480px){
+    .edit-ex-row{grid-template-columns:1fr; }
+    .edit-remove-btn{justify-self:end; width:auto; padding:4px 10px;}
+  }
+
+  .see-more-wrap{
+    text-align:center;
+    margin-top:6px;
+  }
+  .see-more-btn{
+    width:100%;
+    padding:12px;
+    border-style:dashed;
+    color:var(--olive);
+  }
+  .see-more-btn:hover{border-color:var(--forest); color:var(--forest);}
+
+  .week-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--olive);
+    margin-bottom:10px;
+    padding-left:2px;
+  }
+
+  .new-week-btn{
+    margin-left:auto;
+    border-color:var(--clay);
+    color:var(--clay);
+  }
+  .new-week-btn:hover{background:var(--clay); color:#fffdf8;}
+
+  .log-fields{
+    display:flex;
+    align-items:center;
+    gap:3px;
+    margin-left:auto;
+    flex-shrink:0;
+  }
+  .log-input{
+    width:38px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    padding:4px 3px;
+    border:1px solid var(--parchment-line);
+    border-radius:3px;
+    background:var(--parchment);
+    color:var(--ink);
+    text-align:center;
+  }
+  .log-input:focus{outline:none; border-color:var(--olive); background:#fffdf8;}
+  .log-input.is-goal{color:var(--olive); opacity:0.75; font-style:italic;}
+  .log-input::placeholder{color:var(--olive); opacity:0.55; font-size:10px;}
+  .log-wt{width:42px;}
+  .log-x{
+    font-size:11px;
+    color:var(--olive);
+    opacity:0.6;
+  }
+  @media (max-width:480px){
+    ul.ex-list li{flex-wrap:wrap;}
+    .log-fields{margin-left:28px; width:100%;}
+  }
+  .wt-log{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--substituted-accent);
+    background:rgba(184,134,46,0.1);
+    padding:1px 6px;
+    border-radius:3px;
+    white-space:nowrap;
+  }
+
+  #historyView{margin-bottom:20px;}
+  .hist-section{
+    border:1px solid var(--parchment-line);
+    background:#fffdf8;
+    border-radius:4px;
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .hist-controls{margin-bottom:12px;}
+
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(43,46,38,0.45);
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .modal-box{
+    background:#fffdf8;
+    border:1px solid var(--parchment-line);
+    border-radius:6px;
+    padding:20px;
+    max-width:420px;
+    width:100%;
+    box-shadow:0 8px 30px rgba(43,46,38,0.25);
+  }
+  .modal-msg{
+    font-size:14.5px;
+    margin-bottom:14px;
+    color:var(--ink);
+  }
+  .modal-actions{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    justify-content:flex-end;
+  }
+
+  .day-body{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height 0.3s ease;
+    border-top:1px solid transparent;
+  }
+  .day.open .day-body{border-top:1px solid var(--parchment-line);}
+
+  .day-body-inner{padding:16px 18px 18px;}
+  .timing{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--olive);
+    margin-bottom:12px;
+  }
+  ul.ex-list{list-style:none; margin:0; padding:0;}
+  ul.ex-list li{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:9px 0;
+    border-bottom:1px dashed var(--parchment-line);
+    font-size:14.5px;
+  }
+  ul.ex-list li:last-child{border-bottom:none;}
+  .checkbox{
+    width:18px; height:18px;
+    border:1.5px solid var(--olive);
+    border-radius:3px;
+    flex-shrink:0;
+    margin-top:2px;
+    cursor:pointer;
+    position:relative;
+    transition:all 0.15s ease;
+  }
+  .checkbox.checked{background:var(--forest); border-color:var(--forest);}
+  .checkbox.checked::after{
+    content:"";
+    position:absolute;
+    left:5px; top:1px;
+    width:5px; height:9px;
+    border:solid white;
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+  .ex-text.done{text-decoration:line-through; opacity:0.5;}
+  .ex-name{font-weight:500;}
+  .ex-detail{color:var(--olive); font-size:13px;}
+
+  .mark-row{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:8px 12px;
+    border-radius:3px;
+    border:1px solid var(--parchment-line);
+    background:transparent;
+    cursor:pointer;
+    color:var(--ink);
+    transition:all 0.15s ease;
+  }
+  .btn:hover{border-color:var(--olive);}
+  .btn.active-completed{background:var(--forest); color:#fffdf8; border-color:var(--forest);}
+  .btn.active-skipped{background:var(--skip); color:#fffdf8; border-color:var(--skip);}
+  .btn.active-substituted{background:var(--ok); color:#fffdf8; border-color:var(--ok);}
+
+  .day-note{
+    font-size:13.5px;
+    font-style:italic;
+    color:var(--substituted-accent);
+    background:rgba(184,134,46,0.09);
+    border-left:3px solid var(--substituted-accent);
+    padding:8px 10px;
+    border-radius:0 3px 3px 0;
+    margin:10px 0 4px;
+  }
+  .plan-actual-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--olive);
+    margin:14px 0 4px;
+  }
+  .plan-actual-label:first-of-type{margin-top:0;}
+  ul.ex-list.struck-plan li{opacity:0.6;}
+  ul.ex-list.struck-plan .ex-name,
+  ul.ex-list.struck-plan .ex-detail{text-decoration:line-through;}
+
+  /* Mobility library */
+  .library{margin-top:40px;}
+  .library h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:22px;
+    color:var(--forest);
+    margin-bottom:4px;
+  }
+  .library .sub{margin-bottom:18px;}
+  .lib-item{
+    border-left:3px solid var(--clay);
+    background:#fffdf8;
+    border-radius:0 4px 4px 0;
+    padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .lib-item .lib-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:15.5px;
+    margin-bottom:5px;
+  }
+  .lib-item .lib-action{font-size:14px; margin-bottom:6px; opacity:0.85;}
+  .lib-item .lib-time{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--clay);
+  }
+
+  footer{
+    margin-top:44px;
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--olive);
+    letter-spacing:0.06em;
+  }
+
+  /* View toggle */
+  .view-toggle{
+    display:flex;
+    gap:8px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .view-btn.active{background:var(--forest); color:#fffdf8; border-color:var(--forest);}
+
+  /* Calendar */
+  #calendarView{
+    border:1px solid var(--parchment-line);
+    background:#fffdf8;
+    border-radius:4px;
+    padding:18px 16px 16px;
+    margin-bottom:20px;
+  }
+  .cal-nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .cal-month-label{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:17px;
+    color:var(--forest);
+  }
+  .cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+  }
+  .cal-dow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--olive);
+    text-align:center;
+    padding-bottom:4px;
+  }
+  .cal-cell{
+    aspect-ratio:1;
+    border-radius:4px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    border:1px solid var(--parchment-line);
+    background:transparent;
+    color:var(--ink);
+    position:relative;
+  }
+  .cal-cell.empty{border:none; background:none;}
+  .cal-cell.has-data{cursor:pointer; color:#fffdf8; border:none;}
+  .cal-cell.has-data:hover{outline:2px solid var(--ink); outline-offset:1px;}
+  .cal-cell.is-today{box-shadow:0 0 0 2px var(--clay) inset;}
+  .cal-legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-top:16px;
+    font-size:12px;
+    color:var(--ink);
+    opacity:0.8;
+  }
+  .cal-legend .dot{
+    display:inline-block;
+    width:9px; height:9px;
+    border-radius:50%;
+    margin-right:5px;
+    vertical-align:middle;
+  }
+
+  .cal-cell.selected{outline:2px solid var(--ink); outline-offset:1px;}
+  .cal-badge{
+    position:absolute;
+    top:1px; right:2px;
+    font-size:9px;
+    color:var(--substituted-accent);
+    background:#fffdf8;
+    border-radius:50%;
+    width:12px; height:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+  }
+
+  #calDetails{
+    margin-top:16px;
+    border-top:1px solid var(--parchment-line);
+    padding-top:14px;
+  }
+  #calDetails .cd-placeholder{
+    font-size:13px;
+    color:var(--olive);
+    font-style:italic;
+  }
+  #calDetails .cd-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  #calDetails .cd-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:16px;
+    color:var(--forest);
+  }
+  #calDetails .cd-date{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--olive);
+  }
+  #calDetails ul{list-style:none; margin:8px 0 0; padding:0;}
+  #calDetails ul li{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    padding:5px 0;
+    font-size:13.5px;
+  }
+  #calDetails .cd-mark{
+    width:15px; flex-shrink:0;
+    font-size:13px;
+    line-height:1.4;
+  }
+  #calDetails .cd-mark.yes{color:var(--ok);}
+  #calDetails .cd-mark.no{color:var(--olive); opacity:0.5;}
+  /* Stats bar */
+  .stats-bar{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:8px;
+    margin-bottom:22px;
+  }
+  .stat{
+    border:1px solid var(--parchment-line);
+    background:#fffdf8;
+    border-radius:4px;
+    padding:12px 6px;
+    text-align:center;
+  }
+  .stat-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:500;
+    font-size:22px;
+    line-height:1;
+    margin-bottom:4px;
+  }
+  .stat-label{
+    font-size:10.5px;
+    letter-spacing:0.04em;
+    color:var(--ink);
+    opacity:0.7;
+  }
+  @media (max-width:520px){
+    .stats-bar{grid-template-columns:repeat(3,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Weekly Training Ledger</div>
+    <h1>Trailhead Log</h1>
+    <div class="sub">Tap a day to open it, check off exercises as you go, and mark the day complete, skipped, or rested. Your marks are saved automatically.</div>
+  </header>
+
+  <div class="stats-bar" id="statsBar"></div>
+
+  <div class="profile">
+    <div class="profile-label">Week at a glance</div>
+    <svg class="trail" viewBox="0 0 700 70" id="trailSvg">
+      <path class="trail-path" d="M20,50 L120,25 L220,45 L320,15 L420,35 L520,20 L620,40 L680,50" />
+    </svg>
+  </div>
+
+  <div class="view-toggle">
+    <button class="btn view-btn active" id="listViewBtn" data-view="list">List View</button>
+    <button class="btn view-btn" id="calViewBtn" data-view="calendar">Calendar View</button>
+    <button class="btn view-btn" id="histViewBtn" data-view="history">Progress</button>
+    <button class="btn new-week-btn" id="newWeekBtn" title="Archive this week and start a new one">&#8635; New Week</button>
+  </div>
+
+  <div id="calendarView" style="display:none;">
+    <div class="cal-nav">
+      <button class="btn" id="calPrev">&larr; Prev</button>
+      <div class="cal-month-label" id="calMonthLabel"></div>
+      <button class="btn" id="calNext">Next &rarr;</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <span><i class="dot" style="background:var(--ok)"></i>Completed</span>
+      <span><i class="dot" style="background:var(--ok)"></i>&#8644; Substituted, still counts</span>
+      <span><i class="dot" style="background:var(--skip)"></i>Skipped / Rested</span>
+      <span><i class="dot" style="background:var(--olive)"></i>Rest day</span>
+      <span><i class="dot" style="background:var(--tan)"></i>Upcoming</span>
+    </div>
+    <div id="calDetails"><div class="cd-placeholder">Hover or tap a day above to see what was on the plan and what got done.</div></div>
+  </div>
+
+  <div id="historyView" style="display:none;">
+    <div class="hist-section">
+      <div class="profile-label">Workouts completed per week</div>
+      <div id="weeklyChart"></div>
+    </div>
+    <div class="hist-section">
+      <div class="profile-label">Weight &amp; rep progression</div>
+      <div class="hist-controls">
+        <select class="edit-input" id="progressExerciseSelect" style="width:auto; min-width:200px;"></select>
+        <select class="edit-input" id="progressMetricSelect" style="width:auto;">
+          <option value="reps">Reps</option>
+          <option value="sets">Sets</option>
+          <option value="weight">Weight</option>
+        </select>
+      </div>
+      <div id="progressChart"></div>
+      <div class="cd-placeholder" id="progressHint" style="margin-top:8px;">Fill in the sets / reps / lb fields next to exercises in list view and they'll chart here over time.</div>
+    </div>
+  </div>
+
+  <div id="days"></div>
+
+  <datalist id="exercise-library"></datalist>
+
+  <div class="modal-overlay" id="modalOverlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-msg" id="modalMsg"></div>
+      <input type="text" class="edit-input" id="modalInput" style="display:none;">
+      <div class="modal-actions">
+        <button type="button" class="btn active-completed" id="modalOk">OK</button>
+        <button type="button" class="btn" id="modalCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="library">
+    <h2>Foot Tightness &amp; Mobility Library</h2>
+    <div class="sub">For arch tightness or cramping, or right after planks and hikes.</div>
+
+    <div class="lib-item">
+      <div class="lib-title">1. Kettlebell / Tennis Ball Arch Rollout</div>
+      <div class="lib-action">Stand near a wall. Place a tennis ball or kettlebell handle flat on the floor. Step on it with a bare foot, moderate pressure, and roll from heel to ball of foot. Hold hot spots 20&ndash;30 sec.</div>
+      <div class="lib-time">1&ndash;2 minutes per foot</div>
+    </div>
+
+    <div class="lib-item">
+      <div class="lib-title">2. Seated Plantar Fascia Stretch</div>
+      <div class="lib-action">Cross your ankle over the opposite knee. Pull your toes back toward your shin with one hand, and gently massage the tight arch tissue with the other.</div>
+      <div class="lib-time">Hold 30 sec, repeat 2&ndash;3x per side</div>
+    </div>
+
+    <div class="lib-item">
+      <div class="lib-title">3. Toe Curls &amp; Splay (Intrinsic Strength)</div>
+      <div class="lib-action">Feet flat on the floor. Lift only the big toe, keeping the other four flat. Swap it: big toe down, lift the four small toes. Then splay all toes as wide as possible.</div>
+      <div class="lib-time">60 seconds total</div>
+    </div>
+
+    <div class="lib-item">
+      <div class="lib-title">4. The "Toe Sit" Hero Pose</div>
+      <div class="lib-action">Kneel with knees together, tuck your toes completely under to sit on the balls of your feet, and slowly sit your hips back onto your heels. Lean forward onto your hands to reduce the load if it's too intense.</div>
+      <div class="lib-time">Hold 30&ndash;60 seconds</div>
+    </div>
+  </div>
+
+  <footer>
+    Trailhead Log &mdash; personal training tracker &nbsp;&middot;&nbsp;
+    <button class="reset-link" id="resetBtn">reset all marks</button>
+  </footer>
+
+</div>
+
+<script>
+const DEFAULT_DAYS = [
+  {
+    id:"fri", name:"Friday", date:"Jun 26", isoDate:"2026-06-26", focus:"Strength Training (Upper Body Focus)", timing:"",
+    defaultStatus:"completed",
+    exercises:[
+      {name:"Dumbbell Bench Press", detail:"3 sets × 8\u201310 reps @ 35 lb"},
+      {name:"Single-Arm Row", detail:"4 sets × 10 reps/side @ 35 lb, supported on bench"},
+      {name:"Seated Dumbbell Shoulder Press", detail:"3 sets × 10 reps @ 20 lb"},
+      {name:"Reclined Dumbbell Curls", detail:"3 sets × 12 reps @ 15 lb"},
+      {name:"Standing Hammer Curls", detail:"4 sets × 12 reps @ 15 lb"},
+      {name:"Standard Floor Plank", detail:"3 sets × 45\u201360 sec"}
+    ]
+  },
+  {
+    id:"sat", name:"Saturday", date:"Jun 27", isoDate:"2026-06-27", focus:"The Big Hike \u2014 main lower-body endurance focus", timing:"All day",
+    defaultStatus:"completed",
+    exercises:[]
+  },
+  {
+    id:"sun", name:"Sunday", date:"Jun 28", isoDate:"2026-06-28", focus:"Full Recovery", timing:"All day",
+    defaultStatus:"completed",
+    isRest:true,
+    exercises:[]
+  },
+  {
+    id:"mon", name:"Monday", date:"Jun 29", isoDate:"2026-06-29", focus:"Core & Conditioning (Trail Prep, Leg-Friendly)", timing:"",
+    defaultStatus:"completed",
+    exercises:[
+      {name:"Quadruped Row Hold (Iso-Hold)", detail:"3 sets × 15\u201320 sec per side"},
+      {name:"Plank Tap-Outs (or Standard Plank)", detail:"3 sets × 30\u201345 sec"},
+      {name:"Floor Crunches or Deadbugs", detail:"3 sets × 15 reps"},
+      {name:"Bird-Dogs", detail:"3 sets × 10 reps per side"}
+    ]
+  },
+  {
+    id:"tue", name:"Tuesday", date:"Jun 30", isoDate:"2026-06-30", focus:"Strength Training (Lower Body Focus)", timing:"",
+    defaultStatus:"substituted",
+    defaultActual:"1 mile run",
+    defaultNote:"Ran 1 mile instead of the planned lower-body strength session.",
+    exercises:[
+      {name:"Dumbbell Goblet Squats", detail:"3 sets × 10\u201312 reps @ 35 lb"},
+      {name:"Dumbbell Bulgarian Split Squats", detail:"4 sets × 8 reps @ 15 lb"},
+      {name:"Weighted Calf Raises", detail:"4 sets × 15\u201320 reps @ 20 lb"},
+      {name:"Standard Floor Plank", detail:"3 sets × 45\u201360 sec"}
+    ]
+  },
+  {
+    id:"wed", name:"Wednesday", date:"Jul 1", isoDate:"2026-07-01", focus:"Active Recovery & Mobility", timing:"6:00 PM \u2013 8:30 PM",
+    defaultStatus:"upcoming",
+    exercises:[
+      {name:"Deep stretching & mindfulness yoga class", detail:""}
+    ]
+  },
+  {
+    id:"thu", name:"Thursday", date:"Jul 2", isoDate:"2026-07-02", focus:"Optional Quick Flush", timing:"Before 5:00 PM",
+    defaultStatus:"upcoming",
+    exercises:[
+      {name:"15-Minute Continuous Circuit", detail:"skip if short on time"},
+      {name:"Bodyweight Squats", detail:"10 reps"},
+      {name:"Light Kettlebell Deadlifts", detail:"10 reps @ 20 lb"},
+      {name:"Floor Plank", detail:"30 seconds"}
+    ]
+  }
+];
+
+const STORAGE_KEY = "trailhead-log-state";
+const CONFIG_KEY = "trailhead-log-days-config";
+const HISTORY_KEY = "trailhead-log-history";
+let state = null;
+let DAYS = [];
+let weekHistory = [];
+
+const GOAL_WEIGHTS = {
+  "Dumbbell Bench Press": 35,
+  "Single-Arm Row": 35,
+  "Seated Dumbbell Shoulder Press": 20,
+  "Reclined Dumbbell Curls": 15,
+  "Standing Hammer Curls": 15,
+  "Dumbbell Goblet Squats": 35,
+  "Dumbbell Bulgarian Split Squats": 15,
+  "Weighted Calf Raises": 20,
+  "Light Kettlebell Deadlifts": 20
+};
+
+async function loadDaysConfig(){
+  try{
+    const res = await window.storage.get(CONFIG_KEY);
+    if(res && res.value){
+      DAYS = JSON.parse(res.value);
+    } else {
+      DAYS = JSON.parse(JSON.stringify(DEFAULT_DAYS));
+    }
+  }catch(e){
+    DAYS = JSON.parse(JSON.stringify(DEFAULT_DAYS));
+  }
+
+  // migration: add goal weights to known exercises in stored config if missing
+  let changed = false;
+  DAYS.forEach(d=>{
+    (d.exercises||[]).forEach(ex=>{
+      if(GOAL_WEIGHTS[ex.name] !== undefined && !/lb/i.test(ex.detail||"")){
+        ex.detail = (ex.detail ? ex.detail + " " : "") + "@ " + GOAL_WEIGHTS[ex.name] + " lb";
+        changed = true;
+      }
+    });
+  });
+  if(changed) await saveDaysConfig();
+}
+
+async function saveDaysConfig(){
+  try{
+    await window.storage.set(CONFIG_KEY, JSON.stringify(DAYS));
+  }catch(e){
+    console.error("save days config failed", e);
+  }
+}
+
+async function loadHistory(){
+  try{
+    const res = await window.storage.get(HISTORY_KEY);
+    weekHistory = (res && res.value) ? JSON.parse(res.value) : [];
+  }catch(e){
+    weekHistory = [];
+  }
+}
+
+async function saveHistory(){
+  try{
+    await window.storage.set(HISTORY_KEY, JSON.stringify(weekHistory));
+  }catch(e){
+    console.error("save history failed", e);
+  }
+}
+
+async function rolloverOnce(){
+  weekHistory.push({
+    archivedAt: new Date().toISOString(),
+    weekStart: DAYS[0] ? DAYS[0].isoDate : "",
+    days: JSON.parse(JSON.stringify(DAYS)),
+    state: JSON.parse(JSON.stringify(state))
+  });
+
+  DAYS.forEach(d=>{
+    const dt = new Date(d.isoDate + "T00:00:00");
+    dt.setDate(dt.getDate() + 7);
+    d.isoDate = toLocalIso(dt);
+    d.date = dt.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  });
+
+  const s = {};
+  DAYS.forEach(d=>{
+    s[d.id] = {status:"upcoming", checks:{}, note:"", actual:"", weights:{}};
+  });
+  state = s;
+}
+
+async function startNewWeek(){
+  if(!await showConfirm("Archive this week and start a fresh one? Your history is kept and the new week uses your current plan.")) return;
+  await rolloverOnce();
+  await saveHistory();
+  await saveDaysConfig();
+  await saveState();
+  showAllDays = false;
+  editingDayId = null;
+  render();
+}
+
+const WEEK_ORDER = ["sun","mon","tue","wed","thu","fri","sat"];
+
+function toLocalIso(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function localToday(){
+  return toLocalIso(new Date());
+}
+
+async function migrateToSundayWeek(){
+  let changed = false;
+  const sun = DAYS.find(d=>d.id==="sun");
+
+  if(sun){
+    // any day dated before this week's Sunday moves forward 7 days;
+    // its old marks get archived so nothing is lost
+    const moved = [];
+    DAYS.forEach(d=>{
+      if(d.isoDate < sun.isoDate){
+        moved.push({day: JSON.parse(JSON.stringify(d)), st: JSON.parse(JSON.stringify(state[d.id]))});
+        const dt = new Date(d.isoDate+"T00:00:00");
+        dt.setDate(dt.getDate()+7);
+        d.isoDate = toLocalIso(dt);
+        d.date = dt.toLocaleDateString('en-US',{month:'short', day:'numeric'});
+        state[d.id] = {status:"upcoming", checks:{}, note:"", actual:"", weights:{}};
+        changed = true;
+      }
+    });
+    if(moved.length){
+      const rec = {
+        archivedAt: new Date().toISOString(),
+        weekStart: moved.map(m=>m.day.isoDate).sort()[0],
+        days: moved.map(m=>m.day),
+        state: {}
+      };
+      moved.forEach(m=>{ rec.state[m.day.id] = m.st; });
+      weekHistory.push(rec);
+      weekHistory.sort((a,b)=>String(a.weekStart).localeCompare(String(b.weekStart)));
+    }
+  }
+
+  const before = DAYS.map(d=>d.id).join();
+  DAYS.sort((a,b)=>WEEK_ORDER.indexOf(a.id)-WEEK_ORDER.indexOf(b.id));
+  if(DAYS.map(d=>d.id).join() !== before) changed = true;
+
+  if(changed){
+    await saveDaysConfig();
+    await saveState();
+    await saveHistory();
+  }
+}
+
+async function applyDataPatches(){
+  if(!state._patches) state._patches = [];
+
+  // Jul 3, 2026: 30 curls @ 10 lb
+  if(!state._patches.includes("curls-2026-07-03")){
+    const fri = DAYS.find(d=>d.isoDate==="2026-07-03");
+    if(fri && state[fri.id]){
+      const idx = fri.exercises.findIndex(ex=>/curl/i.test(ex.name));
+      if(idx >= 0){
+        if(!state[fri.id].weights) state[fri.id].weights = {};
+        state[fri.id].weights[idx] = {sets:1, reps:30, weight:10};
+        state[fri.id].checks[idx] = true;
+      }
+    }
+    state._patches.push("curls-2026-07-03");
+    await saveState();
+  }
+
+  // Correction: Thu Jul 2 skipped; Fri Jul 3 = 3.48 mi hike (1h 8min) + curls instead of upper body
+  if(!state._patches.includes("correction-2026-07-03")){
+    const thu = DAYS.find(d=>d.isoDate==="2026-07-02");
+    if(thu && state[thu.id]){
+      state[thu.id].status = "skipped";
+      state[thu.id].checks = {};
+    }
+    const fri = DAYS.find(d=>d.isoDate==="2026-07-03");
+    if(fri && state[fri.id]){
+      state[fri.id].status = "substituted";
+      state[fri.id].actual = "3.48 mi hike + curls";
+      state[fri.id].note = "Hiked 3.48 mi in 1h 8min, plus 30 curls @ 10 lb. Skipped the rest of the upper body session.";
+    }
+    const sat = DAYS.find(d=>d.isoDate==="2026-07-04");
+    if(sat && state[sat.id]){
+      state[sat.id].status = "upcoming";
+      state[sat.id].note = "";
+    }
+    state._patches.push("correction-2026-07-03");
+    await saveState();
+  }
+
+  // Fri Jul 3 still in progress: un-strike the plan, log shoulder press + bench
+  if(!state._patches.includes("inprogress-2026-07-03")){
+    const fri = DAYS.find(d=>d.isoDate==="2026-07-03");
+    if(fri && state[fri.id]){
+      state[fri.id].status = "upcoming";
+      state[fri.id].actual = "";
+      state[fri.id].note = "Hiked 3.48 mi in 1h 8min earlier today. Shoulder press: 10 reps then 20 reps @ 20 lb.";
+      if(!state[fri.id].weights) state[fri.id].weights = {};
+      const exs = fri.exercises;
+      const benchIdx = exs.findIndex(ex=>/bench/i.test(ex.name));
+      const pressIdx = exs.findIndex(ex=>/shoulder press/i.test(ex.name));
+      if(benchIdx >= 0){
+        state[fri.id].weights[benchIdx] = {sets:1, reps:10, weight:30};
+        state[fri.id].checks[benchIdx] = true;
+      }
+      if(pressIdx >= 0){
+        state[fri.id].weights[pressIdx] = {sets:2, reps:20, weight:20};
+        state[fri.id].checks[pressIdx] = true;
+      }
+    }
+    state._patches.push("inprogress-2026-07-03");
+    await saveState();
+  }
+}
+
+async function autoRollover(){
+  const todayStr = localToday();
+  let rolled = 0;
+  // if today is past the last day of the current week, roll forward until the week contains today
+  while(rolled < 52){
+    const lastIso = DAYS.reduce((mx,d)=> d.isoDate > mx ? d.isoDate : mx, "");
+    if(!lastIso || todayStr <= lastIso) break;
+    await rolloverOnce();
+    rolled++;
+  }
+  if(rolled > 0){
+    await saveHistory();
+    await saveDaysConfig();
+    await saveState();
+  }
+  return rolled;
+}
+
+function defaultState(){
+  const s = {};
+  DAYS.forEach(d=>{
+    s[d.id] = {
+      status: d.defaultStatus,
+      checks: d.defaultChecks ? {...d.defaultChecks} : {},
+      note: d.defaultNote || "",
+      actual: d.defaultActual || "",
+      weights: {}
+    };
+  });
+  return s;
+}
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY);
+    if(res && res.value){
+      state = JSON.parse(res.value);
+    } else {
+      state = defaultState();
+    }
+  }catch(e){
+    state = defaultState();
+  }
+}
+
+async function saveState(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){
+    console.error("save failed", e);
+  }
+}
+
+function statusLabel(status){
+  if(status==="completed") return "Completed";
+  if(status==="substituted") return "\u21C4 Substituted, Still Counts";
+  if(status==="skipped") return "Skipped / Rested";
+  if(status==="rest") return "Rest Day";
+  return "Upcoming";
+}
+function statusClass(status){
+  if(status==="completed") return "status-completed";
+  if(status==="substituted") return "status-substituted";
+  if(status==="skipped") return "status-skipped";
+  if(status==="rest") return "status-rest";
+  return "status-upcoming";
+}
+function markerColor(status){
+  if(status==="completed") return "#28A745";
+  if(status==="substituted") return "#28A745";
+  if(status==="skipped") return "#E23B2E";
+  if(status==="rest") return "#8C7A54";
+  return "#D9CBA3";
+}
+
+const EXERCISE_LIBRARY = [
+  // From the existing routine
+  "Cardio (1 Mile Run)",
+  "Quadruped Row Hold (Iso-Hold)",
+  "Plank Tap-Outs",
+  "Floor Crunches",
+  "Deadbugs",
+  "Bird-Dogs",
+  "Dumbbell Goblet Squats",
+  "Dumbbell Bulgarian Split Squats",
+  "Weighted Calf Raises",
+  "Standard Floor Plank",
+  "Dumbbell Bench Press",
+  "Single-Arm Row",
+  "Seated Dumbbell Shoulder Press",
+  "Reclined Dumbbell Curls",
+  "Standing Hammer Curls",
+  "Bodyweight Squats",
+  "Light Kettlebell Deadlifts",
+  "Floor Plank",
+  "Deep Stretching & Mindfulness Yoga",
+  // Chest
+  "Push-Ups",
+  "Incline Dumbbell Press",
+  "Chest Fly",
+  "Cable Crossover",
+  "Decline Push-Ups",
+  // Back
+  "Bent-Over Row",
+  "Lat Pulldown",
+  "Pull-Ups",
+  "Deadlift",
+  "Superman",
+  // Shoulders
+  "Lateral Raises",
+  "Front Raises",
+  "Face Pulls",
+  "Arnold Press",
+  // Arms
+  "Bicep Curls",
+  "Tricep Dips",
+  "Tricep Extension",
+  "Concentration Curls",
+  // Legs
+  "Lunges",
+  "Leg Press",
+  "Romanian Deadlift",
+  "Hip Thrusts",
+  "Step-Ups",
+  "Walking Lunges",
+  // Core
+  "Russian Twists",
+  "Mountain Climbers",
+  "Bicycle Crunches",
+  "Side Plank",
+  "Hanging Leg Raises",
+  // Cardio
+  "Jump Rope",
+  "Rowing Machine",
+  "Stationary Cycling",
+  "Stair Climber",
+  "Burpees",
+  "Jumping Jacks",
+  "Cardio (5K Run)",
+  // Mobility / Recovery
+  "Foam Rolling",
+  "Hip Flexor Stretch",
+  "Hamstring Stretch",
+  "Cat-Cow Stretch",
+  // Functional / Full-body
+  "Kettlebell Swings",
+  "Farmer's Carry",
+  "Turkish Get-Up"
+].filter((v,i,arr)=>arr.indexOf(v)===i).sort((a,b)=>a.localeCompare(b));
+
+let editingDayId = null;
+let showAllDays = false;
+
+function openModal({message, withInput, defaultValue}){
+  return new Promise(resolve=>{
+    const overlay = document.getElementById("modalOverlay");
+    const msg = document.getElementById("modalMsg");
+    const input = document.getElementById("modalInput");
+    const ok = document.getElementById("modalOk");
+    const cancel = document.getElementById("modalCancel");
+
+    msg.textContent = message;
+    input.style.display = withInput ? "" : "none";
+    input.value = defaultValue || "";
+    overlay.style.display = "flex";
+    if(withInput) setTimeout(()=>input.focus(), 50);
+
+    function cleanup(result){
+      overlay.style.display = "none";
+      ok.removeEventListener("click", onOk);
+      cancel.removeEventListener("click", onCancel);
+      input.removeEventListener("keydown", onKey);
+      resolve(result);
+    }
+    function onOk(){ cleanup(withInput ? input.value : true); }
+    function onCancel(){ cleanup(withInput ? null : false); }
+    function onKey(e){ if(e.key==="Enter") onOk(); if(e.key==="Escape") onCancel(); }
+
+    ok.addEventListener("click", onOk);
+    cancel.addEventListener("click", onCancel);
+    input.addEventListener("keydown", onKey);
+  });
+}
+
+function showPrompt(message, defaultValue){
+  return openModal({message, withInput:true, defaultValue});
+}
+function showConfirm(message){
+  return openModal({message, withInput:false});
+}
+
+function parseGoal(detail){
+  const s = String(detail || "");
+  const goal = {sets:null, reps:null, weight:null};
+  const setsM = s.match(/([\d.]+)\s*sets?/i);
+  if(setsM) goal.sets = parseFloat(setsM[1]);
+  if(!/sec/i.test(s)){
+    const repsM = s.match(/[x\u00D7]\s*([\d.]+)/) || s.match(/([\d.]+)\s*reps?/i);
+    if(repsM) goal.reps = parseFloat(repsM[1]);
+  }
+  const wtM = s.match(/@\s*([\d.]+)\s*lb/i) || s.match(/([\d.]+)\s*lb/i);
+  if(wtM) goal.weight = parseFloat(wtM[1]);
+  return goal;
+}
+
+function normalizeLog(entry){
+  if(!entry) return {sets:null, reps:null, weight:null};
+  if(typeof entry === "object") return {sets:entry.sets ?? null, reps:entry.reps ?? null, weight:entry.weight ?? null};
+  // legacy string entry like "40 lb × 10" or "15 reps"
+  const parsed = parseLog(entry);
+  const setsMatch = String(entry).match(/([\d.]+)\s*sets?/i);
+  return {
+    sets: setsMatch ? parseFloat(setsMatch[1]) : null,
+    reps: parsed.reps,
+    weight: parsed.weight
+  };
+}
+
+function escapeAttr(str){
+  return String(str||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+}
+
+function buildExerciseRow(name, detail, rowId){
+  return `<div class="edit-ex-row" data-row-id="${rowId}">
+    <input type="text" class="edit-input ex-name-input" list="exercise-library" placeholder="Exercise name (type or pick from list)" value="${escapeAttr(name)}">
+    <input type="text" class="edit-input ex-detail-input" placeholder="Sets / reps / detail" value="${escapeAttr(detail)}">
+    <button type="button" class="edit-remove-btn" title="Remove exercise">&times;</button>
+  </div>`;
+}
+
+function buildEditForm(d){
+  let rowId = 0;
+  let rowsHtml = d.exercises.map(ex=>buildExerciseRow(ex.name, ex.detail, rowId++)).join("");
+  return `
+    <div class="edit-form" data-next-row="${rowId}">
+      <label class="edit-label">Focus / workout name</label>
+      <input type="text" class="edit-input" id="edit-focus-${d.id}" value="${escapeAttr(d.focus)}">
+
+      <label class="edit-label">Timing (optional)</label>
+      <input type="text" class="edit-input" id="edit-timing-${d.id}" placeholder="e.g. 6:00 PM – 8:30 PM" value="${escapeAttr(d.timing||"")}">
+
+      <label class="edit-checkbox-row">
+        <input type="checkbox" id="edit-isrest-${d.id}" ${d.isRest ? "checked" : ""}>
+        This is a rest day (no exercise checklist)
+      </label>
+
+      <div class="edit-label" style="margin-top:14px;">Exercises</div>
+      <div class="edit-ex-list" id="edit-ex-list-${d.id}">${rowsHtml}</div>
+      <button type="button" class="btn" id="edit-add-ex-${d.id}">+ Add Exercise</button>
+
+      <div class="edit-actions">
+        <button type="button" class="btn active-completed" id="edit-save-${d.id}">Save Changes</button>
+        <button type="button" class="btn" id="edit-cancel-${d.id}">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function render(){
+  const container = document.getElementById("days");
+  container.innerHTML = "";
+
+  const todayStr = localToday();
+
+  if(DAYS.length){
+    const sorted = [...DAYS].sort((a,b)=>a.isoDate.localeCompare(b.isoDate));
+    const first = new Date(sorted[0].isoDate+"T00:00:00");
+    const last = new Date(sorted[sorted.length-1].isoDate+"T00:00:00");
+    const fmt = dt => dt.toLocaleDateString('en-US',{month:'short', day:'numeric'});
+    const weekLabel = document.createElement("div");
+    weekLabel.className = "week-label";
+    weekLabel.innerHTML = `Week of ${fmt(first)} &ndash; ${fmt(last)}, ${last.getFullYear()} &nbsp;&middot;&nbsp; Today is ${new Date().toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'})}`;
+    container.appendChild(weekLabel);
+  }
+
+  let displayDays = DAYS;
+  let hiddenCount = 0;
+
+  if(!showAllDays){
+    const pastOrToday = DAYS.filter(d=>d.isoDate <= todayStr);
+    const recent = pastOrToday.slice(-2); // last two chronologically, in ascending order
+    displayDays = recent.length ? recent : DAYS.slice(0,2);
+    if(editingDayId && !displayDays.some(d=>d.id===editingDayId)){
+      const editDay = DAYS.find(d=>d.id===editingDayId);
+      if(editDay) displayDays = [...displayDays, editDay];
+    }
+    hiddenCount = DAYS.length - displayDays.length;
+  }
+
+  displayDays.forEach(d=>{
+    const dayState = state[d.id];
+    const isRestDay = !!d.isRest;
+    const effectiveStatus = isRestDay && dayState.status==="completed" ? "rest" : dayState.status;
+
+    const card = document.createElement("div");
+    card.className = "day" + (editingDayId===d.id ? " open" : "") + (d.isoDate===todayStr ? " today-card" : "");
+    card.id = "card-"+d.id;
+
+    const head = document.createElement("div");
+    head.className = "day-head";
+    const focusHtml = dayState.status === "substituted"
+      ? `<span class="day-focus struck-focus">${d.date} &middot; ${d.focus}</span><span class="day-focus actual-focus">${dayState.actual || "Did something else"}</span>`
+      : `<span class="day-focus">${d.date} &middot; ${d.focus}</span>`;
+    head.innerHTML = `
+      <div class="day-name-wrap">
+        <span class="day-name">${d.name}</span>
+        <span class="day-focus-stack">${focusHtml}</span>
+      </div>
+      <div class="head-right">
+        <button type="button" class="edit-toggle-btn" data-day="${d.id}" title="Edit this day">&#9998;</button>
+        <span class="status-pill ${statusClass(effectiveStatus)}">${statusLabel(effectiveStatus)}</span>
+      </div>
+    `;
+    head.addEventListener("click", ()=>{
+      card.classList.toggle("open");
+      updateBodyHeight(card);
+    });
+
+    const body = document.createElement("div");
+    body.className = "day-body";
+    const inner = document.createElement("div");
+    inner.className = "day-body-inner";
+
+    let innerHtml = "";
+    if(editingDayId === d.id){
+      innerHtml = buildEditForm(d);
+    } else {
+    if(d.timing){
+      innerHtml += `<div class="timing">${d.timing}</div>`;
+    }
+    if(d.exercises.length){
+      if(dayState.status === "substituted"){
+        innerHtml += `<div class="plan-actual-label">Original plan</div>`;
+        innerHtml += `<ul class="ex-list struck-plan">`;
+        d.exercises.forEach((ex)=>{
+          innerHtml += `
+            <li>
+              <span class="ex-text">
+                <span class="ex-name">${ex.name}</span>${ex.detail ? ` &mdash; <span class="ex-detail">${ex.detail}</span>` : ""}
+              </span>
+            </li>`;
+        });
+        innerHtml += `</ul>`;
+        innerHtml += `<div class="plan-actual-label">What I actually did</div>`;
+        innerHtml += `<div class="day-note">${dayState.note || "(no note added)"}</div>`;
+      } else {
+        const weights = dayState.weights || {};
+        innerHtml += `<ul class="ex-list">`;
+        d.exercises.forEach((ex, i)=>{
+          const checked = !!dayState.checks[i];
+          const hasLog = weights[i] !== undefined && weights[i] !== null;
+          const log = hasLog ? normalizeLog(weights[i]) : parseGoal(ex.detail);
+          const goalClass = hasLog ? "" : " is-goal";
+          innerHtml += `
+            <li>
+              <span class="checkbox ${checked?'checked':''}" data-day="${d.id}" data-idx="${i}"></span>
+              <span class="ex-text ${checked?'done':''}">
+                <span class="ex-name">${ex.name}</span>${ex.detail ? ` &mdash; <span class="ex-detail">${ex.detail}</span>` : ""}
+              </span>
+              <span class="log-fields">
+                <input type="text" inputmode="numeric" class="log-input${goalClass}" data-field="sets" data-day="${d.id}" data-idx="${i}" placeholder="sets" value="${escapeAttr(log.sets ?? "")}">
+                <span class="log-x">&times;</span>
+                <input type="text" inputmode="numeric" class="log-input${goalClass}" data-field="reps" data-day="${d.id}" data-idx="${i}" placeholder="reps" value="${escapeAttr(log.reps ?? "")}">
+                <input type="text" inputmode="decimal" class="log-input log-wt${goalClass}" data-field="weight" data-day="${d.id}" data-idx="${i}" placeholder="lb" value="${escapeAttr(log.weight ?? "")}">
+              </span>
+            </li>`;
+        });
+        innerHtml += `</ul>`;
+      }
+    } else {
+      innerHtml += `<div class="timing" style="margin-top:0;">No set exercises &mdash; ${d.focus.toLowerCase()}.</div>`;
+      if(dayState.status === "substituted"){
+        innerHtml += `<div class="plan-actual-label">What I actually did</div>`;
+        innerHtml += `<div class="day-note">${dayState.note || "(no note added)"}</div>`;
+      }
+    }
+
+    if(dayState.note && dayState.status !== "substituted"){
+      innerHtml += `<div class="day-note">${dayState.note}</div>`;
+    }
+
+    innerHtml += `
+      <div class="mark-row">
+        <button class="btn ${dayState.status==='completed'?'active-completed':''}" data-day="${d.id}" data-action="completed">Mark Completed</button>
+        <button class="btn ${dayState.status==='substituted'?'active-substituted':''}" data-day="${d.id}" data-action="substituted">Substituted, Still Counts</button>
+        <button class="btn ${dayState.status==='skipped'?'active-skipped':''}" data-day="${d.id}" data-action="skipped">Mark Skipped</button>
+        <button class="btn" data-day="${d.id}" data-action="upcoming">Reset to Upcoming</button>
+      </div>
+    `;
+    }
+
+    inner.innerHTML = innerHtml;
+    body.appendChild(inner);
+    card.appendChild(head);
+    card.appendChild(body);
+    container.appendChild(card);
+  });
+
+  const seeMoreWrap = document.createElement("div");
+  seeMoreWrap.className = "see-more-wrap";
+  if(showAllDays){
+    seeMoreWrap.innerHTML = `<button type="button" class="btn see-more-btn" id="seeMoreBtn">Show Fewer Days</button>`;
+  } else if(hiddenCount > 0){
+    seeMoreWrap.innerHTML = `<button type="button" class="btn see-more-btn" id="seeMoreBtn">See More Days (${hiddenCount} hidden)</button>`;
+  }
+  container.appendChild(seeMoreWrap);
+  const seeMoreBtn = document.getElementById("seeMoreBtn");
+  if(seeMoreBtn){
+    seeMoreBtn.addEventListener("click", ()=>{
+      showAllDays = !showAllDays;
+      render();
+    });
+  }
+
+  container.querySelectorAll(".checkbox").forEach(cb=>{
+    cb.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const day = cb.dataset.day;
+      const idx = cb.dataset.idx;
+      state[day].checks[idx] = !state[day].checks[idx];
+      await saveState();
+      render();
+      openCard(day);
+      renderTrail();
+    });
+  });
+
+  container.querySelectorAll(".log-input").forEach(inp=>{
+    inp.addEventListener("click", (e)=>e.stopPropagation());
+    inp.addEventListener("change", async ()=>{
+      const day = inp.dataset.day;
+      const idx = inp.dataset.idx;
+      if(!state[day].weights) state[day].weights = {};
+
+      // capture all three fields in this row so goal prefills get saved along with the edit
+      const row = inp.closest(".log-fields");
+      const log = {sets:null, reps:null, weight:null};
+      row.querySelectorAll(".log-input").forEach(f=>{
+        const v = f.value.trim();
+        log[f.dataset.field] = v === "" ? null : (parseFloat(v) || null);
+        f.classList.remove("is-goal");
+      });
+
+      if(log.sets===null && log.reps===null && log.weight===null){
+        delete state[day].weights[idx];
+      } else {
+        state[day].weights[idx] = log;
+      }
+      await saveState();
+      // no re-render: keeps focus for tabbing between fields
+    });
+  });
+
+  container.querySelectorAll(".mark-row .btn").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const day = btn.dataset.day;
+      const action = btn.dataset.action;
+      const dayConfig = DAYS.find(x=>x.id===day);
+
+      if(action === "completed"){
+        const allChecks = {};
+        dayConfig.exercises.forEach((ex,i)=>{ allChecks[i] = true; });
+        state[day].checks = allChecks;
+        state[day].note = "";
+        state[day].actual = "";
+      } else if(action === "substituted"){
+        const existingActual = state[day].actual || "";
+        const actual = await showPrompt("What did you do instead? (short, e.g. \"1 mile run\")", existingActual);
+        if(actual !== null) state[day].actual = actual;
+        const existingNote = state[day].note || "";
+        const note = await showPrompt("Any extra detail? (optional)", existingNote);
+        if(note !== null) state[day].note = note;
+        state[day].checks = {};
+      } else {
+        // skipped or upcoming
+        state[day].checks = {};
+        state[day].note = "";
+        state[day].actual = "";
+      }
+
+      state[day].status = action;
+      await saveState();
+      render();
+      openCard(day);
+      renderTrail();
+    });
+  });
+
+  container.querySelectorAll(".edit-toggle-btn").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const day = btn.dataset.day;
+      editingDayId = (editingDayId === day) ? null : day;
+      render();
+      if(editingDayId) openCard(editingDayId);
+    });
+  });
+
+  if(editingDayId){
+    const id = editingDayId;
+    const addBtn = document.getElementById(`edit-add-ex-${id}`);
+    const exList = document.getElementById(`edit-ex-list-${id}`);
+    const formEl = exList ? exList.closest(".edit-form") : null;
+    const saveBtn = document.getElementById(`edit-save-${id}`);
+    const cancelBtn = document.getElementById(`edit-cancel-${id}`);
+
+    if(addBtn && exList && formEl){
+      addBtn.addEventListener("click", ()=>{
+        let nextRow = parseInt(formEl.dataset.nextRow || "0", 10);
+        exList.insertAdjacentHTML("beforeend", buildExerciseRow("", "", nextRow));
+        formEl.dataset.nextRow = nextRow + 1;
+        const body = exList.closest(".day-body");
+        if(body) updateBodyHeight(body.closest(".day"));
+      });
+    }
+
+    if(exList){
+      exList.addEventListener("click", (e)=>{
+        if(e.target.classList.contains("edit-remove-btn")){
+          const row = e.target.closest(".edit-ex-row");
+          if(row) row.remove();
+          const card = exList.closest(".day");
+          if(card) updateBodyHeight(card);
+        }
+      });
+    }
+
+    if(saveBtn){
+      saveBtn.addEventListener("click", async ()=>{
+        const dayConfig = DAYS.find(x=>x.id===id);
+        const focusVal = document.getElementById(`edit-focus-${id}`).value.trim();
+        const timingVal = document.getElementById(`edit-timing-${id}`).value.trim();
+        const isRestVal = document.getElementById(`edit-isrest-${id}`).checked;
+
+        const newExercises = [];
+        exList.querySelectorAll(".edit-ex-row").forEach(row=>{
+          const nameVal = row.querySelector(".ex-name-input").value.trim();
+          const detailVal = row.querySelector(".ex-detail-input").value.trim();
+          if(nameVal) newExercises.push({name:nameVal, detail:detailVal});
+        });
+
+        dayConfig.focus = focusVal || dayConfig.focus;
+        dayConfig.timing = timingVal;
+        dayConfig.isRest = isRestVal;
+        dayConfig.exercises = newExercises;
+
+        // exercise list changed shape, so old checkbox indices no longer apply
+        state[id].checks = {};
+
+        await saveDaysConfig();
+        await saveState();
+        editingDayId = null;
+        render();
+        openCard(id);
+        renderTrail();
+      });
+    }
+
+    if(cancelBtn){
+      cancelBtn.addEventListener("click", ()=>{
+        editingDayId = null;
+        render();
+      });
+    }
+  }
+
+  renderTrail();
+  if(currentView==="calendar") renderCalendar();
+  renderStats();
+}
+
+let openDayId = null;
+function openCard(id){
+  openDayId = id;
+  const card = document.getElementById("card-"+id);
+  if(card){
+    card.classList.add("open");
+    updateBodyHeight(card);
+  }
+}
+function updateBodyHeight(card){
+  const body = card.querySelector(".day-body");
+  if(card.classList.contains("open")){
+    body.style.maxHeight = body.scrollHeight + "px";
+  } else {
+    body.style.maxHeight = "0px";
+  }
+}
+
+function renderStats(){
+  let rawCompleted=0, rawSubstituted=0, rawSkipped=0, rawUpcoming=0, restDays=0;
+
+  DAYS.forEach(d=>{
+    const dayState = state[d.id];
+    const isRestDay = !!d.isRest;
+    if(dayState.status==="completed"){
+      if(isRestDay) restDays++;
+      rawCompleted++;
+    } else if(dayState.status==="substituted"){
+      rawSubstituted++;
+    } else if(dayState.status==="skipped"){
+      rawSkipped++;
+    } else {
+      rawUpcoming++;
+    }
+  });
+
+  const totalCompleted = rawCompleted + rawSubstituted;
+
+  const bar = document.getElementById("statsBar");
+  bar.innerHTML = `
+    <div class="stat">
+      <div class="stat-num" style="color:var(--ok)">${totalCompleted}</div>
+      <div class="stat-label">Completed<br>(incl. substituted)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:var(--substituted-accent)">${rawSubstituted}</div>
+      <div class="stat-label">Substituted</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:var(--skip)">${rawSkipped}</div>
+      <div class="stat-label">Skipped</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:var(--olive)">${restDays}</div>
+      <div class="stat-label">Rest Days</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:var(--upcoming)">${rawUpcoming}</div>
+      <div class="stat-label">Upcoming</div>
+    </div>
+  `;
+}
+
+function renderTrail(){
+  const svg = document.getElementById("trailSvg");
+  const pts = [
+    [20,50],[120,25],[220,45],[320,15],[420,35],[520,20],[620,40],
+  ];
+  // remove old markers
+  svg.querySelectorAll(".marker").forEach(m=>m.remove());
+  DAYS.forEach((d,i)=>{
+    const dayState = state[d.id];
+    const isRestDay = !!d.isRest;
+    const effectiveStatus = isRestDay && dayState.status==="completed" ? "rest" : dayState.status;
+    const [x,y] = pts[i];
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.classList.add("marker");
+    g.innerHTML = `
+      <circle cx="${x}" cy="${y}" r="9" fill="${markerColor(effectiveStatus)}"></circle>
+      <text x="${x}" y="${y+3}" fill="#fffdf8" style="font-size:9px;">${d.name[0]}</text>
+      <text x="${x}" y="${y+22}">${d.name.slice(0,3)}</text>
+    `;
+    svg.appendChild(g);
+  });
+}
+
+let currentView = "list";
+let calYear = 2026;
+let calMonth = 6; // 0-indexed: 6 = July
+let selectedCalDay = null;
+
+function allWeeks(){
+  return [
+    ...weekHistory.map(h=>({label:h.weekStart, days:h.days, state:h.state})),
+    {label: DAYS[0] ? DAYS[0].isoDate : "", days:DAYS, state:state}
+  ];
+}
+
+function shortWeekLabel(iso){
+  if(!iso) return "?";
+  const dt = new Date(iso+"T00:00:00");
+  return dt.toLocaleDateString('en-US',{month:'short', day:'numeric'});
+}
+
+function renderWeeklyChart(){
+  const weeks = allWeeks();
+  const counts = weeks.map(w=>{
+    let c = 0;
+    w.days.forEach(d=>{
+      const ds = w.state[d.id];
+      if(!ds) return;
+      if(!d.isRest && (ds.status==="completed" || ds.status==="substituted")) c++;
+    });
+    return c;
+  });
+  const labels = weeks.map(w=>shortWeekLabel(w.label));
+  const maxVal = Math.max(...counts, 1);
+
+  const W = 660, H = 180, padL = 30, padB = 28, padT = 12;
+  const chartW = W - padL - 10, chartH = H - padT - padB;
+  const barW = Math.min(56, chartW / counts.length * 0.6);
+  const step = chartW / counts.length;
+
+  let bars = "";
+  counts.forEach((c,i)=>{
+    const bh = (c / maxVal) * chartH;
+    const x = padL + step*i + (step-barW)/2;
+    const y = padT + chartH - bh;
+    bars += `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="3" fill="#28A745"></rect>`;
+    bars += `<text x="${x+barW/2}" y="${y-5}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="12" fill="#2B2E26">${c}</text>`;
+    bars += `<text x="${x+barW/2}" y="${H-8}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8C7A54">${labels[i]}</text>`;
+  });
+
+  document.getElementById("weeklyChart").innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" style="width:100%; height:auto; display:block;">
+      <line x1="${padL}" y1="${padT+chartH}" x2="${W-10}" y2="${padT+chartH}" stroke="#E4D9BE" stroke-width="1.5"/>
+      ${bars}
+    </svg>`;
+}
+
+function parseLog(raw){
+  const s = String(raw);
+  let weight = null, reps = null;
+
+  // reps: number after × or x, e.g. "40 lb × 10"
+  const xMatch = s.match(/[x\u00D7]\s*([\d.]+)/i);
+  if(xMatch) reps = parseFloat(xMatch[1]);
+
+  // explicit "15 reps" style
+  if(reps === null){
+    const repMatch = s.match(/([\d.]+)\s*reps?/i);
+    if(repMatch) reps = parseFloat(repMatch[1]);
+  }
+
+  // weight: first number, unless that number was already consumed as reps-only entry
+  const firstMatch = s.match(/[\d.]+/);
+  if(firstMatch){
+    const firstNum = parseFloat(firstMatch[0]);
+    const repsOnly = reps !== null && firstNum === reps && !xMatch;
+    if(!repsOnly) weight = firstNum;
+  }
+
+  // "40 x 10" with no unit: weight=40 reps=10 handled above.
+  // "15 reps": weight stays null.
+  if(reps !== null && weight !== null && weight === reps && !xMatch) weight = null;
+
+  return {weight, reps};
+}
+
+function gatherWeightLogs(){
+  const logs = {}; // exercise name -> [{iso, sets, reps, weight}]
+  allWeeks().forEach(w=>{
+    w.days.forEach(d=>{
+      const ds = w.state[d.id];
+      if(!ds || !ds.weights) return;
+      Object.keys(ds.weights).forEach(idx=>{
+        const ex = d.exercises[idx];
+        if(!ex) return;
+        const log = normalizeLog(ds.weights[idx]);
+        if(!logs[ex.name]) logs[ex.name] = [];
+        logs[ex.name].push({iso:d.isoDate, sets:log.sets, reps:log.reps, weight:log.weight});
+      });
+    });
+  });
+  Object.values(logs).forEach(arr=>arr.sort((a,b)=>a.iso.localeCompare(b.iso)));
+  return logs;
+}
+
+function renderProgressChart(){
+  const logs = gatherWeightLogs();
+  const select = document.getElementById("progressExerciseSelect");
+  const metricSelect = document.getElementById("progressMetricSelect");
+  const metric = metricSelect.value || "reps";
+  const names = Object.keys(logs).sort();
+  const prev = select.value;
+
+  select.innerHTML = names.length
+    ? names.map(n=>`<option value="${escapeAttr(n)}">${n}</option>`).join("")
+    : `<option value="">No logged entries yet</option>`;
+  if(prev && names.includes(prev)) select.value = prev;
+
+  const hint = document.getElementById("progressHint");
+  const chartEl = document.getElementById("progressChart");
+
+  const chosen = select.value;
+  const entries = (logs[chosen]||[]).filter(e=>e[metric]!==null && e[metric]!==undefined);
+  if(!chosen || entries.length===0){
+    chartEl.innerHTML = "";
+    hint.style.display = "";
+    hint.textContent = chosen
+      ? `No ${metric} data logged for this exercise yet. Fill in the ${metric} field next to it in list view.`
+      : "Fill in the sets / reps / lb fields next to exercises in list view and they'll chart here over time.";
+    return;
+  }
+  hint.style.display = "none";
+
+  const W = 660, H = 200, padL = 44, padR = 16, padT = 16, padB = 30;
+  const chartW = W - padL - padR, chartH = H - padT - padB;
+  const vals = entries.map(e=>e[metric]);
+  const minV = Math.min(...vals), maxV = Math.max(...vals);
+  const span = (maxV - minV) || 1;
+  const lo = minV - span*0.15, hi = maxV + span*0.15;
+
+  const lineColor = metric === "reps" ? "#B5652B" : metric === "sets" ? "#B8862E" : "#3F4F34";
+
+  const px = i => entries.length===1 ? padL + chartW/2 : padL + (chartW * i/(entries.length-1));
+  const py = v => padT + chartH - ((v - lo)/(hi - lo)) * chartH;
+
+  let path = "", dots = "", labels = "";
+  entries.forEach((e,i)=>{
+    const x = px(i), y = py(e[metric]);
+    path += (i===0 ? `M${x},${y}` : ` L${x},${y}`);
+    dots += `<circle cx="${x}" cy="${y}" r="5" fill="${lineColor}"></circle>`;
+    dots += `<text x="${x}" y="${y-10}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="11" fill="#2B2E26">${e[metric]}</text>`;
+    labels += `<text x="${x}" y="${H-8}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8C7A54">${shortWeekLabel(e.iso)}</text>`;
+  });
+
+  chartEl.innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" style="width:100%; height:auto; display:block;">
+      <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="#E4D9BE" stroke-width="1.5"/>
+      ${entries.length>1 ? `<path d="${path}" fill="none" stroke="${lineColor}" stroke-width="2"/>` : ""}
+      ${dots}
+      ${labels}
+    </svg>`;
+}
+
+function renderHistoryView(){
+  renderWeeklyChart();
+  renderProgressChart();
+}
+
+function switchView(view){
+  currentView = view;
+  document.getElementById("listViewBtn").classList.toggle("active", view==="list");
+  document.getElementById("calViewBtn").classList.toggle("active", view==="calendar");
+  document.getElementById("histViewBtn").classList.toggle("active", view==="history");
+  document.getElementById("days").style.display = view==="list" ? "" : "none";
+  document.getElementById("calendarView").style.display = view==="calendar" ? "" : "none";
+  document.getElementById("historyView").style.display = view==="history" ? "" : "none";
+  if(view==="calendar") renderCalendar();
+  if(view==="history") renderHistoryView();
+}
+
+function findDayByIso(iso){
+  const cur = DAYS.find(d=>d.isoDate===iso);
+  if(cur) return {day:cur, dayState:state[cur.id]};
+  for(let h=weekHistory.length-1; h>=0; h--){
+    const wk = weekHistory[h];
+    const hd = wk.days.find(d=>d.isoDate===iso);
+    if(hd) return {day:hd, dayState:wk.state[hd.id]};
+  }
+  return null;
+}
+
+function renderCalDetails(iso){
+  const panel = document.getElementById("calDetails");
+  const found = iso ? findDayByIso(iso) : null;
+  if(!found || !found.dayState){
+    panel.innerHTML = `<div class="cd-placeholder">Hover or tap a day above to see what was on the plan and what got done.</div>`;
+    return;
+  }
+  const match = found.day;
+  const dayState = found.dayState;
+  const isRestDay = !!match.isRest;
+  const effectiveStatus = isRestDay && dayState.status==="completed" ? "rest" : dayState.status;
+
+  let html = `
+    <div class="cd-head">
+      <div>
+        <div class="cd-title ${dayState.status==='substituted' ? 'struck-focus' : ''}">${match.name} &mdash; ${match.focus}</div>
+        ${dayState.status==='substituted' ? `<div class="cd-title" style="margin-top:2px; color:var(--substituted-accent);">${dayState.actual || "Did something else"}</div>` : ""}
+        <div class="cd-date">${match.date}</div>
+      </div>
+      <span class="status-pill ${statusClass(effectiveStatus)}">${statusLabel(effectiveStatus)}</span>
+    </div>
+  `;
+  if(dayState.status === "substituted"){
+    if(match.exercises.length){
+      html += `<div class="plan-actual-label">Original plan</div><ul>`;
+      match.exercises.forEach(ex=>{
+        html += `<li><span class="cd-mark no">&ndash;</span><span class="done-text">${ex.name}${ex.detail ? ` &mdash; ${ex.detail}` : ""}</span></li>`;
+      });
+      html += `</ul>`;
+    }
+    html += `<div class="plan-actual-label">What I actually did</div>`;
+    html += `<div class="day-note">${dayState.note || "(no note added)"}</div>`;
+  } else if(match.exercises.length){
+    const weights = dayState.weights || {};
+    html += `<ul>`;
+    match.exercises.forEach((ex,i)=>{
+      const checked = !!dayState.checks[i];
+      const log = normalizeLog(weights[i]);
+      const parts = [];
+      if(log.sets!==null && log.reps!==null) parts.push(`${log.sets}\u00D7${log.reps}`);
+      else if(log.reps!==null) parts.push(`${log.reps} reps`);
+      else if(log.sets!==null) parts.push(`${log.sets} sets`);
+      if(log.weight!==null) parts.push(`${log.weight} lb`);
+      const wt = parts.length ? ` <span style="color:var(--substituted-accent); font-family:'IBM Plex Mono',monospace; font-size:11.5px;">[${parts.join(" @ ")}]</span>` : "";
+      html += `
+        <li>
+          <span class="cd-mark ${checked?'yes':'no'}">${checked?'\u2713':'\u2013'}</span>
+          <span class="${checked?'done-text':''}">${ex.name}${ex.detail ? ` &mdash; ${ex.detail}` : ""}</span>${wt}
+        </li>`;
+    });
+    html += `</ul>`;
+  } else {
+    html += `<div class="timing" style="margin-top:6px;">No set exercises &mdash; ${match.focus.toLowerCase()}.</div>`;
+  }
+  panel.innerHTML = html;
+}
+
+function renderCalendar(){
+  const label = new Date(calYear, calMonth, 1).toLocaleDateString('en-US', {month:'long', year:'numeric'});
+  document.getElementById("calMonthLabel").textContent = label;
+
+  const grid = document.getElementById("calGrid");
+  grid.innerHTML = "";
+
+  ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d=>{
+    const dow = document.createElement("div");
+    dow.className = "cal-dow";
+    dow.textContent = d;
+    grid.appendChild(dow);
+  });
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const todayStr = localToday();
+
+  for(let i=0;i<firstDay;i++){
+    const empty = document.createElement("div");
+    empty.className = "cal-cell empty";
+    grid.appendChild(empty);
+  }
+
+  for(let day=1; day<=daysInMonth; day++){
+    const iso = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const found = findDayByIso(iso);
+    const cell = document.createElement("div");
+    cell.className = "cal-cell";
+    if(iso===todayStr) cell.classList.add("is-today");
+
+    if(found && found.dayState){
+      const dayState = found.dayState;
+      const isRestDay = !!found.day.isRest;
+      const effectiveStatus = isRestDay && dayState.status==="completed" ? "rest" : dayState.status;
+      cell.classList.add("has-data");
+      cell.style.background = markerColor(effectiveStatus);
+      cell.textContent = day;
+      if(effectiveStatus === "substituted"){
+        const badge = document.createElement("span");
+        badge.className = "cal-badge";
+        badge.textContent = "\u21C4";
+        cell.appendChild(badge);
+      }
+      if(selectedCalDay===iso) cell.classList.add("selected");
+
+      cell.addEventListener("mouseenter", ()=> renderCalDetails(iso));
+      cell.addEventListener("mouseleave", ()=> renderCalDetails(selectedCalDay));
+      cell.addEventListener("click", ()=>{
+        selectedCalDay = iso;
+        renderCalendar();
+        renderCalDetails(iso);
+      });
+    } else {
+      cell.textContent = day;
+    }
+    grid.appendChild(cell);
+  }
+}
+
+document.getElementById("listViewBtn").addEventListener("click", ()=>switchView("list"));
+document.getElementById("calViewBtn").addEventListener("click", ()=>switchView("calendar"));
+document.getElementById("histViewBtn").addEventListener("click", ()=>switchView("history"));
+document.getElementById("newWeekBtn").addEventListener("click", startNewWeek);
+document.getElementById("progressExerciseSelect").addEventListener("change", renderProgressChart);
+document.getElementById("progressMetricSelect").addEventListener("change", renderProgressChart);
+document.getElementById("calPrev").addEventListener("click", ()=>{
+  calMonth--;
+  if(calMonth<0){calMonth=11; calYear--;}
+  renderCalendar();
+});
+document.getElementById("calNext").addEventListener("click", ()=>{
+  calMonth++;
+  if(calMonth>11){calMonth=0; calYear++;}
+  renderCalendar();
+});
+
+document.getElementById("resetBtn").addEventListener("click", async ()=>{
+  if(await showConfirm("Reset all days and checkmarks to their defaults?")){
+    state = defaultState();
+    await saveState();
+    render();
+  }
+});
+
+(async ()=>{
+  document.getElementById("exercise-library").innerHTML =
+    EXERCISE_LIBRARY.map(name=>`<option value="${escapeAttr(name)}"></option>`).join("");
+  await loadDaysConfig();
+  await loadHistory();
+  await loadState();
+  await migrateToSundayWeek();
+  await autoRollover();
+  await applyDataPatches();
+  render();
+  // open today's card if we can guess it, else Monday
+  const todayIdx = new Date().getDay(); // 0=Sun
+  const order = ["sun","mon","tue","wed","thu","fri","sat"];
+  openCard(order[todayIdx]);
+})();
+</script>
+
+</body>
+</html>
