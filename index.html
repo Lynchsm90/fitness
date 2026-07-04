@@ -273,14 +273,16 @@
   .ex-header-actions{
     display:flex;
     align-items:center;
-    gap:6px;
+    gap:4px;
     margin-left:auto;
     flex-shrink:0;
+    flex-wrap:wrap;
+    justify-content:flex-end;
   }
   .pct-badge{
     font-family:'IBM Plex Mono', monospace;
-    font-size:10.5px;
-    padding:2px 7px;
+    font-size:10px;
+    padding:2px 6px;
     border-radius:20px;
     white-space:nowrap;
   }
@@ -1461,11 +1463,20 @@ let collapseOverride = {};
 function calcSetCompletion(ex, sets, hasLog){
   const goal = parseGoal(ex.detail || "");
   if(!goal.sets || goal.sets <= 1) return null; // only meaningful for multi-set goals
+
   const goalReps = goal.reps || 1;
-  const goalTotal = goal.sets * goalReps;
-  const doneTotal = hasLog ? (sets||[]).reduce((sum,s)=> sum + (s.reps || 0), 0) : 0;
-  const percent = goalTotal > 0 ? Math.round((doneTotal / goalTotal) * 100) : 0;
-  return {goalSets: goal.sets, goalReps, doneTotal, goalTotal, percent};
+  const goalRepsTotal = goal.sets * goalReps;
+  const doneRepsTotal = hasLog ? (sets||[]).reduce((sum,s)=> sum + (s.reps || 0), 0) : 0;
+  const repsPercent = goalRepsTotal > 0 ? Math.round((doneRepsTotal / goalRepsTotal) * 100) : 0;
+
+  let weightPercent = null;
+  if(goal.weight){
+    const goalWeightTotal = goal.sets * goal.weight;
+    const doneWeightTotal = hasLog ? (sets||[]).reduce((sum,s)=> sum + (s.weight || 0), 0) : 0;
+    weightPercent = goalWeightTotal > 0 ? Math.round((doneWeightTotal / goalWeightTotal) * 100) : 0;
+  }
+
+  return {goalSets: goal.sets, goalReps, goalWeight: goal.weight, repsPercent, weightPercent};
 }
 
 function buildExerciseBlock(ex, i, dayState, dayId, isExtra){
@@ -1483,9 +1494,11 @@ function buildExerciseBlock(ex, i, dayState, dayId, isExtra){
   const completion = isExtra ? null : calcSetCompletion(ex, sets, hasLog);
   let badgeHtml = "";
   if(completion){
-    const pct = completion.percent;
-    const badgeClass = pct >= 100 ? "pct-full" : pct > 0 ? "pct-partial" : "pct-none";
-    badgeHtml = `<span class="pct-badge ${badgeClass}">${pct}%</span>`;
+    const pctClass = p => p >= 100 ? "pct-full" : p > 0 ? "pct-partial" : "pct-none";
+    badgeHtml += `<span class="pct-badge ${pctClass(completion.repsPercent)}" title="Reps: ${completion.repsPercent}% of goal">${completion.repsPercent}%R</span>`;
+    if(completion.weightPercent !== null){
+      badgeHtml += `<span class="pct-badge ${pctClass(completion.weightPercent)}" title="Weight: ${completion.weightPercent}% of goal">${completion.weightPercent}%W</span>`;
+    }
   }
 
   let html = `<div class="ex-block${extraClass}">
