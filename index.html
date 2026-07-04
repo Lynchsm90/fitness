@@ -241,36 +241,123 @@
   }
   .new-week-btn:hover{background:var(--clay); color:#fffdf8;}
 
-  .log-fields{
+  .ex-block{
+    border:1px solid var(--parchment-line);
+    background:#fffdf8;
+    border-radius:4px;
+    padding:10px 12px;
+    margin-bottom:8px;
+  }
+  .ex-block.extra-exercise{
+    border-left:3px solid var(--clay);
+    background:rgba(181,101,43,0.06);
+  }
+  .ex-header{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .ex-header-actions{
     display:flex;
     align-items:center;
-    gap:3px;
+    gap:6px;
     margin-left:auto;
     flex-shrink:0;
   }
-  .log-input{
-    width:38px;
+  .pct-badge{
     font-family:'IBM Plex Mono', monospace;
-    font-size:11.5px;
+    font-size:10.5px;
+    padding:2px 7px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  .pct-badge.pct-full{background:rgba(40,167,69,0.14); color:var(--ok);}
+  .pct-badge.pct-partial{background:rgba(184,134,46,0.15); color:var(--substituted-accent);}
+  .pct-badge.pct-none{background:rgba(140,122,84,0.1); color:var(--olive);}
+  .ex-remove-btn{
+    background:none;
+    border:none;
+    color:var(--olive);
+    opacity:0.45;
+    font-size:16px;
+    cursor:pointer;
+    line-height:1;
+    flex-shrink:0;
+    padding:0 2px;
+  }
+  .ex-remove-btn:hover{opacity:1; color:var(--skip);}
+  .set-table{margin-left:28px; margin-bottom:6px;}
+  .set-head{
+    display:grid;
+    grid-template-columns:36px 60px 60px 26px;
+    gap:4px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--olive);
+    margin-bottom:4px;
+    padding-left:2px;
+  }
+  .set-row{
+    display:grid;
+    grid-template-columns:36px 60px 60px 26px;
+    gap:4px;
+    align-items:center;
+    margin-bottom:3px;
+  }
+  .set-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--olive);
+    text-align:center;
+  }
+  .set-input{
+    width:100%;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
     padding:4px 3px;
     border:1px solid var(--parchment-line);
     border-radius:3px;
     background:var(--parchment);
     color:var(--ink);
     text-align:center;
+    box-sizing:border-box;
   }
-  .log-input:focus{outline:none; border-color:var(--olive); background:#fffdf8;}
-  .log-input.is-goal{color:var(--olive); opacity:0.75; font-style:italic;}
-  .log-input::placeholder{color:var(--olive); opacity:0.55; font-size:10px;}
-  .log-wt{width:42px;}
-  .log-x{
-    font-size:11px;
+  .set-input:focus{outline:none; border-color:var(--olive); background:#fffdf8;}
+  .set-input.is-goal{color:var(--olive); opacity:0.75; font-style:italic;}
+  .set-input::placeholder{color:var(--olive); opacity:0.55; font-size:10px;}
+  .set-remove-btn{
+    background:none;
+    border:1px solid transparent;
     color:var(--olive);
-    opacity:0.6;
+    border-radius:3px;
+    width:22px; height:22px;
+    font-size:13px;
+    cursor:pointer;
+    opacity:0.5;
+    line-height:1;
   }
-  @media (max-width:480px){
-    ul.ex-list li{flex-wrap:wrap;}
-    .log-fields{margin-left:28px; width:100%;}
+  .set-remove-btn:hover{opacity:1; border-color:var(--skip); color:var(--skip);}
+  .add-set-btn{
+    margin-left:28px;
+    padding:4px 10px;
+    font-size:10px;
+    border-style:dashed;
+  }
+  .add-extra-btn{
+    width:100%;
+    padding:10px;
+    border-style:dashed;
+    color:var(--clay);
+    margin-top:6px;
+  }
+  .add-extra-btn:hover{border-color:var(--clay); color:var(--forest);}
+  @media (max-width:420px){
+    .set-head, .set-row{grid-template-columns:28px 1fr 1fr 22px;}
+    .set-table{margin-left:0;}
+    .add-set-btn{margin-left:0;}
   }
   .wt-log{
     font-family:'IBM Plex Mono', monospace;
@@ -625,6 +712,24 @@
     .stats-bar{grid-template-columns:repeat(3,1fr);}
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = "https://hktbcgzdxqidjhdedwpl.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdGJjZ3pkeHFpZGpoZGVkd3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTI0NDQsImV4cCI6MjA5ODY4ODQ0NH0.rTc-2ZvPXHxu_YVHnjshSwiulobun-d3Rinc9-0Z31s";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const db = {
+  async get(key){
+    const {data, error} = await sb.from("fitness_data").select("value").eq("key", key).maybeSingle();
+    if(error) throw error;
+    return data ? data.value : null;
+  },
+  async set(key, value){
+    const {error} = await sb.from("fitness_data").upsert({key, value, updated_at: new Date().toISOString()}, {onConflict:"key"});
+    if(error) throw error;
+  }
+};
+</script>
 </head>
 <body>
 <div class="bg-layer"></div>
@@ -746,10 +851,10 @@ const DEFAULT_DAYS = [
     id:"fri", name:"Friday", date:"Jun 26", isoDate:"2026-06-26", focus:"Strength Training (Upper Body Focus)", timing:"",
     defaultStatus:"completed",
     exercises:[
-      {name:"Dumbbell Bench Press", detail:"3 sets × 8\u201310 reps @ 35 lb"},
+      {name:"Slight Incline Dumbbell Bench Press", detail:"3 sets × 8\u201310 reps @ 35 lb"},
       {name:"Single-Arm Row", detail:"4 sets × 10 reps/side @ 35 lb, supported on bench"},
       {name:"Seated Dumbbell Shoulder Press", detail:"3 sets × 10 reps @ 20 lb"},
-      {name:"Reclined Dumbbell Curls", detail:"3 sets × 12 reps @ 15 lb"},
+      {name:"Incline Dumbbell Curls", detail:"3 sets × 12 reps @ 15 lb"},
       {name:"Standing Hammer Curls", detail:"4 sets × 12 reps @ 15 lb"},
       {name:"Standard Floor Plank", detail:"3 sets × 45\u201360 sec"}
     ]
@@ -814,10 +919,10 @@ let DAYS = [];
 let weekHistory = [];
 
 const GOAL_WEIGHTS = {
-  "Dumbbell Bench Press": 35,
+  "Slight Incline Dumbbell Bench Press": 35,
   "Single-Arm Row": 35,
   "Seated Dumbbell Shoulder Press": 20,
-  "Reclined Dumbbell Curls": 15,
+  "Incline Dumbbell Curls": 15,
   "Standing Hammer Curls": 15,
   "Dumbbell Goblet Squats": 35,
   "Dumbbell Bulgarian Split Squats": 15,
@@ -827,9 +932,9 @@ const GOAL_WEIGHTS = {
 
 async function loadDaysConfig(){
   try{
-    const res = await window.storage.get(CONFIG_KEY);
-    if(res && res.value){
-      DAYS = JSON.parse(res.value);
+    const res = await db.get(CONFIG_KEY);
+    if(res){
+      DAYS = typeof res === "string" ? JSON.parse(res) : res;
     } else {
       DAYS = JSON.parse(JSON.stringify(DEFAULT_DAYS));
     }
@@ -852,7 +957,7 @@ async function loadDaysConfig(){
 
 async function saveDaysConfig(){
   try{
-    await window.storage.set(CONFIG_KEY, JSON.stringify(DAYS));
+    await db.set(CONFIG_KEY, DAYS);
   }catch(e){
     console.error("save days config failed", e);
   }
@@ -860,8 +965,8 @@ async function saveDaysConfig(){
 
 async function loadHistory(){
   try{
-    const res = await window.storage.get(HISTORY_KEY);
-    weekHistory = (res && res.value) ? JSON.parse(res.value) : [];
+    const res = await db.get(HISTORY_KEY);
+    weekHistory = res ? (typeof res === "string" ? JSON.parse(res) : res) : [];
   }catch(e){
     weekHistory = [];
   }
@@ -869,7 +974,7 @@ async function loadHistory(){
 
 async function saveHistory(){
   try{
-    await window.storage.set(HISTORY_KEY, JSON.stringify(weekHistory));
+    await db.set(HISTORY_KEY, weekHistory);
   }catch(e){
     console.error("save history failed", e);
   }
@@ -970,7 +1075,7 @@ async function applyDataPatches(){
       const idx = fri.exercises.findIndex(ex=>/curl/i.test(ex.name));
       if(idx >= 0){
         if(!state[fri.id].weights) state[fri.id].weights = {};
-        state[fri.id].weights[idx] = {sets:1, reps:30, weight:10};
+        state[fri.id].weights[idx] = [{reps:30, weight:10}];
         state[fri.id].checks[idx] = true;
       }
     }
@@ -1000,27 +1105,57 @@ async function applyDataPatches(){
     await saveState();
   }
 
-  // Fri Jul 3 still in progress: un-strike the plan, log shoulder press + bench
-  if(!state._patches.includes("inprogress-2026-07-03")){
+  // Fri Jul 3 exact snapshot (hardcoded before GitHub/Supabase migration so nothing is lost)
+  if(!state._patches.includes("exact-snapshot-2026-07-03")){
     const fri = DAYS.find(d=>d.isoDate==="2026-07-03");
     if(fri && state[fri.id]){
       state[fri.id].status = "upcoming";
       state[fri.id].actual = "";
-      state[fri.id].note = "Hiked 3.48 mi in 1h 8min earlier today. Shoulder press: 10 reps then 20 reps @ 20 lb.";
-      if(!state[fri.id].weights) state[fri.id].weights = {};
+      state[fri.id].note = "Hiked 3.48 mi in 1h 8min earlier today.";
+      state[fri.id].checks = {};
+      state[fri.id].weights = {};
+
       const exs = fri.exercises;
-      const benchIdx = exs.findIndex(ex=>/bench/i.test(ex.name));
-      const pressIdx = exs.findIndex(ex=>/shoulder press/i.test(ex.name));
+      const idxOf = re => exs.findIndex(ex=>re.test(ex.name));
+      const benchIdx = idxOf(/bench/i);
+      const rowIdx = idxOf(/single-arm row/i);
+      const pressIdx = idxOf(/shoulder press/i);
+      const curlsIdx = idxOf(/incline dumbbell curls/i);
+      const hammerIdx = idxOf(/hammer curls/i);
+
       if(benchIdx >= 0){
-        state[fri.id].weights[benchIdx] = {sets:1, reps:10, weight:30};
+        state[fri.id].weights[benchIdx] = [
+          {reps:10, weight:30},
+          {reps:10, weight:50},
+          {reps:10, weight:50}
+        ];
         state[fri.id].checks[benchIdx] = true;
       }
+      if(rowIdx >= 0){
+        state[fri.id].weights[rowIdx] = [
+          {reps:10, weight:50}
+        ];
+      }
       if(pressIdx >= 0){
-        state[fri.id].weights[pressIdx] = {sets:2, reps:20, weight:20};
-        state[fri.id].checks[pressIdx] = true;
+        state[fri.id].weights[pressIdx] = [
+          {reps:10, weight:20},
+          {reps:20, weight:20}
+        ];
+      }
+      if(curlsIdx >= 0){
+        state[fri.id].weights[curlsIdx] = [
+          {reps:30, weight:10}
+        ];
+      }
+      if(hammerIdx >= 0){
+        state[fri.id].weights[hammerIdx] = [
+          {reps:30, weight:15},
+          {reps:10, weight:15},
+          {reps:10, weight:15}
+        ];
       }
     }
-    state._patches.push("inprogress-2026-07-03");
+    state._patches.push("exact-snapshot-2026-07-03");
     await saveState();
   }
 }
@@ -1059,9 +1194,9 @@ function defaultState(){
 
 async function loadState(){
   try{
-    const res = await window.storage.get(STORAGE_KEY);
-    if(res && res.value){
-      state = JSON.parse(res.value);
+    const res = await db.get(STORAGE_KEY);
+    if(res){
+      state = typeof res === "string" ? JSON.parse(res) : res;
     } else {
       state = defaultState();
     }
@@ -1072,7 +1207,7 @@ async function loadState(){
 
 async function saveState(){
   try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify(state));
+    await db.set(STORAGE_KEY, state);
   }catch(e){
     console.error("save failed", e);
   }
@@ -1112,10 +1247,10 @@ const EXERCISE_LIBRARY = [
   "Dumbbell Bulgarian Split Squats",
   "Weighted Calf Raises",
   "Standard Floor Plank",
-  "Dumbbell Bench Press",
+  "Slight Incline Dumbbell Bench Press",
   "Single-Arm Row",
   "Seated Dumbbell Shoulder Press",
-  "Reclined Dumbbell Curls",
+  "Incline Dumbbell Curls",
   "Standing Hammer Curls",
   "Bodyweight Squats",
   "Light Kettlebell Deadlifts",
@@ -1230,10 +1365,36 @@ function parseGoal(detail){
   return goal;
 }
 
+function goalToSets(detail){
+  const g = parseGoal(detail);
+  const count = g.sets || 1;
+  const arr = [];
+  for(let i=0; i<count; i++) arr.push({reps:g.reps, weight:g.weight});
+  return arr;
+}
+
+function normalizeSets(entry){
+  if(!entry) return null;
+  if(Array.isArray(entry)) return entry;
+  if(typeof entry === "object" && entry.sets !== undefined){
+    const count = entry.sets || 1;
+    const arr = [];
+    for(let i=0; i<count; i++) arr.push({reps:entry.reps??null, weight:entry.weight??null});
+    return arr;
+  }
+  if(typeof entry === "string"){
+    const parsed = parseLog(entry);
+    return [{reps:parsed.reps, weight:parsed.weight}];
+  }
+  return null;
+}
+
 function normalizeLog(entry){
   if(!entry) return {sets:null, reps:null, weight:null};
+  if(Array.isArray(entry)){
+    return {sets:entry.length, reps:entry[0]?.reps??null, weight:entry[0]?.weight??null};
+  }
   if(typeof entry === "object") return {sets:entry.sets ?? null, reps:entry.reps ?? null, weight:entry.weight ?? null};
-  // legacy string entry like "40 lb × 10" or "15 reps"
   const parsed = parseLog(entry);
   const setsMatch = String(entry).match(/([\d.]+)\s*sets?/i);
   return {
@@ -1281,6 +1442,134 @@ function buildEditForm(d){
       </div>
     </div>
   `;
+}
+
+function calcSetCompletion(ex, sets, hasLog){
+  const goal = parseGoal(ex.detail || "");
+  if(!goal.sets || goal.sets <= 1) return null; // only meaningful for multi-set goals
+  const doneCount = hasLog ? (sets||[]).filter(s=>s.reps!==null && s.reps!==undefined || s.weight!==null && s.weight!==undefined).length : 0;
+  const percent = Math.min(100, Math.round((doneCount / goal.sets) * 100));
+  return {goalSets: goal.sets, doneSets: doneCount, percent};
+}
+
+function buildExerciseBlock(ex, i, dayState, dayId, isExtra){
+  const weights = dayState.weights || {};
+  const key = isExtra ? "x"+i : i;
+  const checked = isExtra ? !!(dayState.extras||[])[i]?.checked : !!dayState.checks[i];
+  const hasLog = weights[key] !== undefined && weights[key] !== null;
+  const sets = hasLog ? (normalizeSets(weights[key]) || [{}]) : goalToSets(ex.detail || "");
+  const goalClass = hasLog ? "" : " is-goal";
+  const extraClass = isExtra ? " extra-exercise" : "";
+
+  const completion = isExtra ? null : calcSetCompletion(ex, sets, hasLog);
+  let badgeHtml = "";
+  if(completion){
+    const pct = completion.percent;
+    const badgeClass = pct >= 100 ? "pct-full" : pct > 0 ? "pct-partial" : "pct-none";
+    badgeHtml = `<span class="pct-badge ${badgeClass}">${pct}%</span>`;
+  }
+
+  let html = `<div class="ex-block${extraClass}">
+    <div class="ex-header">
+      <span class="checkbox ${checked?'checked':''}" data-day="${dayId}" data-idx="${key}"></span>
+      <span class="ex-text ${checked?'done':''}">
+        <span class="ex-name">${formatExName(ex.name)}</span>${ex.detail ? ` &mdash; <span class="ex-detail">${ex.detail}</span>` : ""}
+      </span>
+      <span class="ex-header-actions">
+        ${badgeHtml}
+        <button type="button" class="ex-remove-btn" data-day="${dayId}" data-key="${key}" data-extra="${isExtra?1:0}" title="Remove this exercise">&times;</button>
+      </span>
+    </div>
+    <div class="set-table">
+      <div class="set-head"><span>Set</span><span>Reps</span><span>Weight</span></div>`;
+  sets.forEach((s, si)=>{
+    html += `<div class="set-row">
+      <span class="set-num">${si+1}</span>
+      <input type="text" inputmode="numeric" class="log-input set-input${goalClass}" data-day="${dayId}" data-key="${key}" data-si="${si}" data-field="reps" placeholder="\u2013" value="${escapeAttr(s.reps ?? "")}">
+      <input type="text" inputmode="decimal" class="log-input set-input${goalClass}" data-day="${dayId}" data-key="${key}" data-si="${si}" data-field="weight" placeholder="lb" value="${escapeAttr(s.weight ?? "")}">
+      <button type="button" class="set-remove-btn" data-day="${dayId}" data-key="${key}" data-si="${si}" title="Remove set">&times;</button>
+    </div>`;
+  });
+  html += `</div>
+    <button type="button" class="btn add-set-btn" data-day="${dayId}" data-key="${key}">+ Add Set</button>
+  </div>`;
+  return html;
+}
+
+const CORE_MOVEMENT_TERMS = [
+  "bench press", "shoulder press", "overhead press", "chest press", "leg press",
+  "goblet squat", "split squat", "front squat", "back squat", "squat",
+  "bulgarian split squat", "deadlift", "romanian deadlift",
+  "bicep curl", "hammer curl", "concentration curl", "curl",
+  "tricep extension", "tricep dip", "dip",
+  "lateral raise", "front raise", "calf raise", "raise",
+  "single-arm row", "bent-over row", "row",
+  "lat pulldown", "pull-up", "pull up", "push-up", "push up",
+  "plank tap-out", "plank", "side plank",
+  "crunch", "deadbug", "bird-dog", "bird dog",
+  "russian twist", "mountain climber", "bicycle crunch",
+  "hanging leg raise", "lunge", "walking lunge", "step-up", "step up",
+  "hip thrust", "chest fly", "face pull", "arnold press",
+  "farmer's carry", "farmers carry", "turkish get-up", "turkish get up",
+  "kettlebell swing", "jump rope", "burpee", "jumping jack",
+  "quadruped row hold", "iso-hold"
+].sort((a,b)=>b.length-a.length);
+
+function formatExName(name){
+  const s = String(name||"");
+  for(const term of CORE_MOVEMENT_TERMS){
+    const re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g,"\\$&") + "s?", "i");
+    const m = s.match(re);
+    if(m){
+      const idx = m.index;
+      const before = s.slice(0, idx);
+      const match = s.slice(idx, idx+m[0].length);
+      const after = s.slice(idx+m[0].length);
+      return `${escapeAttr(before)}<strong><u>${escapeAttr(match)}</u></strong>${escapeAttr(after)}`;
+    }
+  }
+  return escapeAttr(s);
+}
+
+async function removeSingleExercise(dayId, idxOrKey, isExtra){
+  if(isExtra){
+    const xi = parseInt(idxOrKey);
+    if(state[dayId].extras) state[dayId].extras.splice(xi, 1);
+    const newWeights = {};
+    Object.keys(state[dayId].weights||{}).forEach(k=>{
+      if(!k.startsWith("x")){ newWeights[k] = state[dayId].weights[k]; return; }
+      const oi = parseInt(k.slice(1));
+      if(oi === xi) return;
+      const nk = oi > xi ? "x"+(oi-1) : k;
+      newWeights[nk] = state[dayId].weights[k];
+    });
+    state[dayId].weights = newWeights;
+    await saveState();
+  } else {
+    const idx = parseInt(idxOrKey);
+    const dayConfig = DAYS.find(d=>d.id===dayId);
+    dayConfig.exercises.splice(idx, 1);
+
+    const newChecks = {};
+    Object.keys(state[dayId].checks||{}).forEach(k=>{
+      const ki = parseInt(k);
+      if(ki === idx) return;
+      newChecks[ki > idx ? ki-1 : ki] = state[dayId].checks[k];
+    });
+    state[dayId].checks = newChecks;
+
+    const newWeights = {};
+    Object.keys(state[dayId].weights||{}).forEach(k=>{
+      if(k.startsWith("x")){ newWeights[k] = state[dayId].weights[k]; return; }
+      const ki = parseInt(k);
+      if(ki === idx) return;
+      newWeights[ki > idx ? ki-1 : ki] = state[dayId].weights[k];
+    });
+    state[dayId].weights = newWeights;
+
+    await saveDaysConfig();
+    await saveState();
+  }
 }
 
 function render(){
@@ -1363,7 +1652,7 @@ function render(){
           innerHtml += `
             <li>
               <span class="ex-text">
-                <span class="ex-name">${ex.name}</span>${ex.detail ? ` &mdash; <span class="ex-detail">${ex.detail}</span>` : ""}
+                <span class="ex-name">${formatExName(ex.name)}</span>${ex.detail ? ` &mdash; <span class="ex-detail">${ex.detail}</span>` : ""}
               </span>
             </li>`;
         });
@@ -1371,28 +1660,14 @@ function render(){
         innerHtml += `<div class="plan-actual-label">What I actually did</div>`;
         innerHtml += `<div class="day-note">${dayState.note || "(no note added)"}</div>`;
       } else {
-        const weights = dayState.weights || {};
-        innerHtml += `<ul class="ex-list">`;
         d.exercises.forEach((ex, i)=>{
-          const checked = !!dayState.checks[i];
-          const hasLog = weights[i] !== undefined && weights[i] !== null;
-          const log = hasLog ? normalizeLog(weights[i]) : parseGoal(ex.detail);
-          const goalClass = hasLog ? "" : " is-goal";
-          innerHtml += `
-            <li>
-              <span class="checkbox ${checked?'checked':''}" data-day="${d.id}" data-idx="${i}"></span>
-              <span class="ex-text ${checked?'done':''}">
-                <span class="ex-name">${ex.name}</span>${ex.detail ? ` &mdash; <span class="ex-detail">${ex.detail}</span>` : ""}
-              </span>
-              <span class="log-fields">
-                <input type="text" inputmode="numeric" class="log-input${goalClass}" data-field="sets" data-day="${d.id}" data-idx="${i}" placeholder="sets" value="${escapeAttr(log.sets ?? "")}">
-                <span class="log-x">&times;</span>
-                <input type="text" inputmode="numeric" class="log-input${goalClass}" data-field="reps" data-day="${d.id}" data-idx="${i}" placeholder="reps" value="${escapeAttr(log.reps ?? "")}">
-                <input type="text" inputmode="decimal" class="log-input log-wt${goalClass}" data-field="weight" data-day="${d.id}" data-idx="${i}" placeholder="lb" value="${escapeAttr(log.weight ?? "")}">
-              </span>
-            </li>`;
+          innerHtml += buildExerciseBlock(ex, i, dayState, d.id, false);
         });
-        innerHtml += `</ul>`;
+        const extras = dayState.extras || [];
+        extras.forEach((ex, i)=>{
+          innerHtml += buildExerciseBlock(ex, i, dayState, d.id, true);
+        });
+        innerHtml += `<button type="button" class="btn add-extra-btn" data-day="${d.id}">+ Add Exercise</button>`;
       }
     } else {
       innerHtml += `<div class="timing" style="margin-top:0;">No set exercises &mdash; ${d.focus.toLowerCase()}.</div>`;
@@ -1443,8 +1718,15 @@ function render(){
     cb.addEventListener("click", async (e)=>{
       e.stopPropagation();
       const day = cb.dataset.day;
-      const idx = cb.dataset.idx;
-      state[day].checks[idx] = !state[day].checks[idx];
+      const key = cb.dataset.idx;
+      if(key.startsWith("x")){
+        const xi = parseInt(key.slice(1));
+        if(state[day].extras && state[day].extras[xi]){
+          state[day].extras[xi].checked = !state[day].extras[xi].checked;
+        }
+      } else {
+        state[day].checks[key] = !state[day].checks[key];
+      }
       await saveState();
       render();
       openCard(day);
@@ -1452,29 +1734,85 @@ function render(){
     });
   });
 
-  container.querySelectorAll(".log-input").forEach(inp=>{
+  container.querySelectorAll(".set-input").forEach(inp=>{
     inp.addEventListener("click", (e)=>e.stopPropagation());
     inp.addEventListener("change", async ()=>{
       const day = inp.dataset.day;
-      const idx = inp.dataset.idx;
+      const key = inp.dataset.key;
+      const si = parseInt(inp.dataset.si);
       if(!state[day].weights) state[day].weights = {};
-
-      // capture all three fields in this row so goal prefills get saved along with the edit
-      const row = inp.closest(".log-fields");
-      const log = {sets:null, reps:null, weight:null};
-      row.querySelectorAll(".log-input").forEach(f=>{
-        const v = f.value.trim();
-        log[f.dataset.field] = v === "" ? null : (parseFloat(v) || null);
-        f.classList.remove("is-goal");
-      });
-
-      if(log.sets===null && log.reps===null && log.weight===null){
-        delete state[day].weights[idx];
-      } else {
-        state[day].weights[idx] = log;
-      }
+      let sets = normalizeSets(state[day].weights[key]) || [];
+      while(sets.length <= si) sets.push({reps:null, weight:null});
+      sets[si][inp.dataset.field] = inp.value.trim() === "" ? null : (parseFloat(inp.value.trim()) || null);
+      inp.classList.remove("is-goal");
+      // remove all is-goal in same row
+      inp.closest(".set-row").querySelectorAll(".set-input").forEach(f=>f.classList.remove("is-goal"));
+      state[day].weights[key] = sets;
       await saveState();
-      // no re-render: keeps focus for tabbing between fields
+    });
+  });
+
+  container.querySelectorAll(".add-set-btn").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const day = btn.dataset.day;
+      const key = btn.dataset.key;
+      if(!state[day].weights) state[day].weights = {};
+      let sets = normalizeSets(state[day].weights[key]) || [];
+      sets.push({reps:null, weight:null});
+      state[day].weights[key] = sets;
+      await saveState();
+      render();
+      openCard(day);
+    });
+  });
+
+  container.querySelectorAll(".set-remove-btn").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const day = btn.dataset.day;
+      const key = btn.dataset.key;
+      const si = parseInt(btn.dataset.si);
+      if(!state[day].weights) state[day].weights = {};
+      let sets = normalizeSets(state[day].weights[key]) || [];
+      sets.splice(si, 1);
+      if(sets.length === 0) delete state[day].weights[key];
+      else state[day].weights[key] = sets;
+      await saveState();
+      render();
+      openCard(day);
+    });
+  });
+
+  container.querySelectorAll(".add-extra-btn").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const day = btn.dataset.day;
+      const name = await showPrompt("Exercise name (or pick from the dropdown next time)");
+      if(!name || !name.trim()) return;
+      if(!state[day].extras) state[day].extras = [];
+      state[day].extras.push({name:name.trim(), detail:"", checked:false});
+      if(!state[day].weights) state[day].weights = {};
+      state[day].weights["x"+(state[day].extras.length-1)] = [{reps:null, weight:null}];
+      await saveState();
+      render();
+      openCard(day);
+    });
+  });
+
+  container.querySelectorAll(".ex-remove-btn").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      const day = btn.dataset.day;
+      const key = btn.dataset.key;
+      const isExtra = btn.dataset.extra === "1";
+      const msg = isExtra
+        ? "Remove this exercise from today?"
+        : "Remove this exercise from the plan? This applies to this day going forward, not just today.";
+      if(!await showConfirm(msg)) return;
+      await removeSingleExercise(day, isExtra ? key.slice(1) : key, isExtra);
+      render();
+      openCard(day);
     });
   });
 
@@ -1772,12 +2110,26 @@ function gatherWeightLogs(){
     w.days.forEach(d=>{
       const ds = w.state[d.id];
       if(!ds || !ds.weights) return;
-      Object.keys(ds.weights).forEach(idx=>{
-        const ex = d.exercises[idx];
-        if(!ex) return;
-        const log = normalizeLog(ds.weights[idx]);
-        if(!logs[ex.name]) logs[ex.name] = [];
-        logs[ex.name].push({iso:d.isoDate, sets:log.sets, reps:log.reps, weight:log.weight});
+      Object.keys(ds.weights).forEach(key=>{
+        let exName;
+        if(key.startsWith("x")){
+          const xi = parseInt(key.slice(1));
+          exName = ds.extras && ds.extras[xi] ? ds.extras[xi].name : null;
+        } else {
+          exName = d.exercises[key] ? d.exercises[key].name : null;
+        }
+        if(!exName) return;
+        const sets = normalizeSets(ds.weights[key]);
+        if(!sets || !sets.length) return;
+        const maxReps = Math.max(...sets.map(s=>s.reps??0));
+        const maxWeight = Math.max(...sets.map(s=>s.weight??0));
+        if(!logs[exName]) logs[exName] = [];
+        logs[exName].push({
+          iso:d.isoDate,
+          sets:sets.length,
+          reps:maxReps||null,
+          weight:maxWeight||null
+        });
       });
     });
   });
@@ -1897,7 +2249,7 @@ function renderCalDetails(iso){
     if(match.exercises.length){
       html += `<div class="plan-actual-label">Original plan</div><ul>`;
       match.exercises.forEach(ex=>{
-        html += `<li><span class="cd-mark no">&ndash;</span><span class="done-text">${ex.name}${ex.detail ? ` &mdash; ${ex.detail}` : ""}</span></li>`;
+        html += `<li><span class="cd-mark no">&ndash;</span><span class="done-text">${formatExName(ex.name)}${ex.detail ? ` &mdash; ${ex.detail}` : ""}</span></li>`;
       });
       html += `</ul>`;
     }
@@ -1908,17 +2260,40 @@ function renderCalDetails(iso){
     html += `<ul>`;
     match.exercises.forEach((ex,i)=>{
       const checked = !!dayState.checks[i];
-      const log = normalizeLog(weights[i]);
-      const parts = [];
-      if(log.sets!==null && log.reps!==null) parts.push(`${log.sets}\u00D7${log.reps}`);
-      else if(log.reps!==null) parts.push(`${log.reps} reps`);
-      else if(log.sets!==null) parts.push(`${log.sets} sets`);
-      if(log.weight!==null) parts.push(`${log.weight} lb`);
-      const wt = parts.length ? ` <span style="color:var(--substituted-accent); font-family:'IBM Plex Mono',monospace; font-size:11.5px;">[${parts.join(" @ ")}]</span>` : "";
+      const sets = normalizeSets(weights[i]);
+      let setInfo = "";
+      if(sets && sets.length){
+        const parts = sets.map((s,si)=>{
+          const p = [];
+          if(s.reps!==null) p.push(s.reps+" reps");
+          if(s.weight!==null) p.push(s.weight+" lb");
+          return p.length ? `S${si+1}: ${p.join(" @ ")}` : "";
+        }).filter(Boolean);
+        if(parts.length) setInfo = ` <span style="color:var(--substituted-accent); font-family:'IBM Plex Mono',monospace; font-size:11px;">[${parts.join(", ")}]</span>`;
+      }
       html += `
         <li>
           <span class="cd-mark ${checked?'yes':'no'}">${checked?'\u2713':'\u2013'}</span>
-          <span class="${checked?'done-text':''}">${ex.name}${ex.detail ? ` &mdash; ${ex.detail}` : ""}</span>${wt}
+          <span class="${checked?'done-text':''}">${formatExName(ex.name)}${ex.detail ? ` &mdash; ${ex.detail}` : ""}</span>${setInfo}
+        </li>`;
+    });
+    const extras = dayState.extras || [];
+    extras.forEach((ex,i)=>{
+      const sets = normalizeSets(weights["x"+i]);
+      let setInfo = "";
+      if(sets && sets.length){
+        const parts = sets.map((s,si)=>{
+          const p = [];
+          if(s.reps!==null) p.push(s.reps+" reps");
+          if(s.weight!==null) p.push(s.weight+" lb");
+          return p.length ? `S${si+1}: ${p.join(" @ ")}` : "";
+        }).filter(Boolean);
+        if(parts.length) setInfo = ` <span style="color:var(--clay); font-family:'IBM Plex Mono',monospace; font-size:11px;">[${parts.join(", ")}]</span>`;
+      }
+      html += `
+        <li>
+          <span class="cd-mark ${ex.checked?'yes':'no'}">${ex.checked?'\u2713':'\u2013'}</span>
+          <span style="color:var(--clay);" class="${ex.checked?'done-text':''}">${formatExName(ex.name)}</span>${setInfo}
         </li>`;
     });
     html += `</ul>`;
