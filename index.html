@@ -227,6 +227,14 @@
     padding:7px 12px 5px;
     border-bottom:1px solid var(--parchment-line);
   }
+  .ex-picker-subcat{
+    padding:5px 12px 3px 18px;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--clay);
+  }
   .ex-picker-item{
     padding:10px 12px;
     font-size:14px;
@@ -1471,21 +1479,47 @@ const EXERCISE_CATEGORIES = {
     "Cat-Cow Stretch",
     "Child's Pose",
     "World's Greatest Stretch",
-    "90/90 Hip Stretch",
-    "Resistance Band Standing Leg March",
-    "Resistance Band Lateral Band Walk",
-    "Resistance Band Monster Walk",
-    "Resistance Band Standing Hip Abduction",
-    "Resistance Band Standing Hip Extension",
-    "Resistance Band Clamshell",
-    "Resistance Band Ankle Dorsiflexion",
-    "Resistance Band Shoulder Dislocates",
-    "Resistance Band Pull-Apart",
-    "Resistance Band Overhead Reach"
-  ]
+    "90/90 Hip Stretch"
+  ],
+  "Resistance Band": {
+    "Lower Body": [
+      "Resistance Band Standing Leg March",
+      "Resistance Band Standing Hip Abduction",
+      "Resistance Band Standing Hip Extension",
+      "Resistance Band Ankle Dorsiflexion",
+      "Resistance Band Standing Kickback"
+    ],
+    "Glutes / Hips": [
+      "Resistance Band Lateral Band Walk",
+      "Resistance Band Monster Walk",
+      "Resistance Band Clamshell",
+      "Resistance Band Glute Bridge",
+      "Resistance Band Squat"
+    ],
+    "Upper Body": [
+      "Resistance Band Shoulder Dislocates",
+      "Resistance Band Pull-Apart",
+      "Resistance Band Overhead Reach",
+      "Resistance Band Push-Up",
+      "Resistance Band Row",
+      "Resistance Band Bicep Curl",
+      "Resistance Band Tricep Pushdown",
+      "Resistance Band Face Pull"
+    ],
+    "Full Body": [
+      "Resistance Band Deadlift",
+      "Resistance Band Good Morning",
+      "Resistance Band Pull-Through",
+      "Resistance Band Squat to Row"
+    ]
+  }
 };
 
-const EXERCISE_LIBRARY = Object.values(EXERCISE_CATEGORIES).flat()
+function flattenCategoryValue(v){
+  return Array.isArray(v) ? v : Object.values(v).flat();
+}
+
+const EXERCISE_LIBRARY = Object.values(EXERCISE_CATEGORIES).flatMap(flattenCategoryValue)
   .filter((v,i,arr)=>arr.indexOf(v)===i).sort((a,b)=>a.localeCompare(b));
 
 /* ---- Categorized exercise picker with live search ---- */
@@ -1586,15 +1620,32 @@ function renderExPicker(query){
 
   let out = "";
   let any = false;
-  for(const [cat, items] of Object.entries(EXERCISE_CATEGORIES)){
+  for(const [cat, val] of Object.entries(EXERCISE_CATEGORIES)){
     if(exPickerActiveCat && cat !== exPickerActiveCat) continue;
-    const matches = q
-      ? items.filter(n => n.toLowerCase().includes(q) || cat.toLowerCase().includes(q))
-      : items;
-    if(!matches.length) continue;
-    any = true;
-    out += `<div class="ex-picker-cat">${escapeAttr(cat)}</div>`;
-    out += matches.map(n=>`<div class="ex-picker-item" data-name="${escapeAttr(n)}">${highlightMatch(n, q)}</div>`).join("");
+    if(Array.isArray(val)){
+      const matches = q
+        ? val.filter(n => n.toLowerCase().includes(q) || cat.toLowerCase().includes(q))
+        : val;
+      if(!matches.length) continue;
+      any = true;
+      out += `<div class="ex-picker-cat">${escapeAttr(cat)}</div>`;
+      out += matches.map(n=>`<div class="ex-picker-item" data-name="${escapeAttr(n)}">${highlightMatch(n, q)}</div>`).join("");
+    } else {
+      let catHtml = "";
+      let catAny = false;
+      for(const [subcat, items] of Object.entries(val)){
+        const matches = q
+          ? items.filter(n => n.toLowerCase().includes(q) || cat.toLowerCase().includes(q) || subcat.toLowerCase().includes(q))
+          : items;
+        if(!matches.length) continue;
+        catAny = true;
+        catHtml += `<div class="ex-picker-subcat">${escapeAttr(subcat)}</div>`;
+        catHtml += matches.map(n=>`<div class="ex-picker-item" data-name="${escapeAttr(n)}">${highlightMatch(n, q)}</div>`).join("");
+      }
+      if(!catAny) continue;
+      any = true;
+      out += `<div class="ex-picker-cat">${escapeAttr(cat)}</div>` + catHtml;
+    }
   }
   exPickerPanel.innerHTML = chipsHtml + (any ? out : `<div class="ex-picker-empty">No matches — press Enter to use what you typed</div>`);
 }
