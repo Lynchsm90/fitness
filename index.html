@@ -174,6 +174,48 @@
     box-sizing:border-box;
   }
   .edit-input:focus{outline:none; border-color:var(--olive);}
+  .ex-picker-panel{
+    position:absolute;
+    z-index:5000;
+    background:#FFFDF7;
+    border:1px solid var(--parchment-line);
+    border-radius:6px;
+    box-shadow:0 6px 20px rgba(63,79,52,0.18);
+    max-height:320px;
+    overflow-y:auto;
+    display:none;
+    font-family:'Source Sans 3', sans-serif;
+    -webkit-overflow-scrolling:touch;
+  }
+  .ex-picker-cat{
+    position:sticky;
+    top:0;
+    background:var(--parchment);
+    color:var(--olive);
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:7px 12px 5px;
+    border-bottom:1px solid var(--parchment-line);
+  }
+  .ex-picker-item{
+    padding:10px 12px;
+    font-size:14px;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .ex-picker-item:hover, .ex-picker-item.active{
+    background:var(--parchment);
+    color:var(--forest);
+  }
+  .ex-picker-item b{color:var(--clay); font-weight:700;}
+  .ex-picker-empty{
+    padding:12px;
+    font-size:13px;
+    color:var(--olive);
+    font-style:italic;
+  }
   .edit-checkbox-row{
     display:flex;
     align-items:center;
@@ -810,7 +852,6 @@ const db = {
 
   <div id="days"></div>
 
-  <datalist id="exercise-library"></datalist>
 
   <div class="modal-overlay" id="modalOverlay" style="display:none;">
     <div class="modal-box">
@@ -1249,80 +1290,272 @@ function markerColor(status){
   return "#D9CBA3";
 }
 
-const EXERCISE_LIBRARY = [
-  // From the existing routine
-  "Cardio (1 Mile Run)",
-  "Quadruped Row Hold (Iso-Hold)",
-  "Plank Tap-Outs",
-  "Floor Crunches",
-  "Deadbugs",
-  "Bird-Dogs",
-  "Dumbbell Goblet Squats",
-  "Dumbbell Bulgarian Split Squats",
-  "Weighted Calf Raises",
-  "Standard Floor Plank",
-  "Slight Incline Dumbbell Bench Press",
-  "Single-Arm Row",
-  "Seated Dumbbell Shoulder Press",
-  "Incline Dumbbell Curls",
-  "Standing Hammer Curls",
-  "Bodyweight Squats",
-  "Light Kettlebell Deadlifts",
-  "Floor Plank",
-  "Deep Stretching & Mindfulness Yoga",
-  // Chest
-  "Push-Ups",
-  "Incline Dumbbell Press",
-  "Chest Fly",
-  "Cable Crossover",
-  "Decline Push-Ups",
-  // Back
-  "Bent-Over Row",
-  "Lat Pulldown",
-  "Pull-Ups",
-  "Deadlift",
-  "Superman",
-  // Shoulders
-  "Lateral Raises",
-  "Front Raises",
-  "Face Pulls",
-  "Arnold Press",
-  // Arms
-  "Bicep Curls",
-  "Tricep Dips",
-  "Tricep Extension",
-  "Concentration Curls",
-  // Legs
-  "Lunges",
-  "Leg Press",
-  "Romanian Deadlift",
-  "Hip Thrusts",
-  "Step-Ups",
-  "Walking Lunges",
-  // Core
-  "Russian Twists",
-  "Mountain Climbers",
-  "Bicycle Crunches",
-  "Side Plank",
-  "Hanging Leg Raises",
-  // Cardio
-  "Jump Rope",
-  "Rowing Machine",
-  "Stationary Cycling",
-  "Stair Climber",
-  "Burpees",
-  "Jumping Jacks",
-  "Cardio (5K Run)",
-  // Mobility / Recovery
-  "Foam Rolling",
-  "Hip Flexor Stretch",
-  "Hamstring Stretch",
-  "Cat-Cow Stretch",
-  // Functional / Full-body
-  "Kettlebell Swings",
-  "Farmer's Carry",
-  "Turkish Get-Up"
-].filter((v,i,arr)=>arr.indexOf(v)===i).sort((a,b)=>a.localeCompare(b));
+const EXERCISE_CATEGORIES = {
+  "Chest": [
+    "Slight Incline Dumbbell Bench Press",
+    "Incline Dumbbell Press",
+    "Flat Dumbbell Bench Press",
+    "Dumbbell Chest Fly",
+    "Chest Fly",
+    "Cable Crossover",
+    "Push-Ups",
+    "Decline Push-Ups",
+    "Wide-Grip Push-Ups",
+    "Dumbbell Pullover"
+  ],
+  "Back": [
+    "Single-Arm Row",
+    "Bent-Over Row",
+    "Dumbbell Bent-Over Row",
+    "Chest-Supported Dumbbell Row",
+    "Quadruped Row Hold (Iso-Hold)",
+    "Lat Pulldown",
+    "Pull-Ups",
+    "Chin-Ups",
+    "Deadlift",
+    "Superman",
+    "Renegade Rows"
+  ],
+  "Shoulders": [
+    "Seated Dumbbell Shoulder Press",
+    "Standing Dumbbell Shoulder Press",
+    "Arnold Press",
+    "Lateral Raises",
+    "Front Raises",
+    "Rear Delt Fly",
+    "Face Pulls",
+    "Dumbbell Shrugs",
+    "Upright Row"
+  ],
+  "Arms": [
+    "Incline Dumbbell Curls",
+    "Standing Hammer Curls",
+    "Bicep Curls",
+    "Concentration Curls",
+    "Zottman Curls",
+    "Tricep Dips",
+    "Tricep Extension",
+    "Overhead Tricep Extension",
+    "Tricep Kickbacks",
+    "Close-Grip Push-Ups"
+  ],
+  "Legs": [
+    "Dumbbell Goblet Squats",
+    "Dumbbell Bulgarian Split Squats",
+    "Bodyweight Squats",
+    "Lunges",
+    "Walking Lunges",
+    "Reverse Lunges",
+    "Dumbbell Step-Ups",
+    "Step-Ups",
+    "Romanian Deadlift",
+    "Dumbbell Romanian Deadlift",
+    "Single-Leg Romanian Deadlift",
+    "Hip Thrusts",
+    "Glute Bridges",
+    "Weighted Calf Raises",
+    "Leg Press",
+    "Wall Sit"
+  ],
+  "Kettlebell": [
+    "Kettlebell Swings",
+    "Kettlebell Goblet Squats",
+    "Kettlebell Deadlifts",
+    "Light Kettlebell Deadlifts",
+    "Double Kettlebell Deadlift",
+    "Double Kettlebell Front Squat",
+    "Kettlebell Front Rack Carry",
+    "Kettlebell Single-Arm Row",
+    "Kettlebell Gorilla Rows",
+    "Kettlebell Press",
+    "Double Kettlebell Press",
+    "Kettlebell Push Press",
+    "Kettlebell Clean",
+    "Kettlebell Clean & Press",
+    "Kettlebell Snatch",
+    "Kettlebell Halos",
+    "Kettlebell Windmill",
+    "Kettlebell Around the World",
+    "Kettlebell Suitcase Carry",
+    "Kettlebell Farmer's Carry",
+    "Kettlebell Reverse Lunges",
+    "Kettlebell Romanian Deadlift",
+    "Turkish Get-Up"
+  ],
+  "Core": [
+    "Plank Tap-Outs",
+    "Standard Floor Plank",
+    "Floor Plank",
+    "Side Plank",
+    "Floor Crunches",
+    "Bicycle Crunches",
+    "Deadbugs",
+    "Bird-Dogs",
+    "Russian Twists",
+    "Mountain Climbers",
+    "Hanging Leg Raises",
+    "Leg Raises",
+    "Hollow Body Hold",
+    "V-Ups",
+    "Ab Rollouts"
+  ],
+  "Cardio": [
+    "Cardio (1 Mile Run)",
+    "Cardio (5K Run)",
+    "Jump Rope",
+    "Rowing Machine",
+    "Stationary Cycling",
+    "Stair Climber",
+    "Burpees",
+    "Jumping Jacks",
+    "High Knees",
+    "Shadow Boxing"
+  ],
+  "Full Body / Functional": [
+    "Farmer's Carry",
+    "Thrusters",
+    "Man Makers",
+    "Dumbbell Clean & Press",
+    "Bear Crawls",
+    "Devil's Press"
+  ],
+  "Mobility / Recovery": [
+    "Deep Stretching & Mindfulness Yoga",
+    "Foam Rolling",
+    "Hip Flexor Stretch",
+    "Hamstring Stretch",
+    "Cat-Cow Stretch",
+    "Child's Pose",
+    "World's Greatest Stretch",
+    "90/90 Hip Stretch"
+  ]
+};
+
+const EXERCISE_LIBRARY = Object.values(EXERCISE_CATEGORIES).flat()
+  .filter((v,i,arr)=>arr.indexOf(v)===i).sort((a,b)=>a.localeCompare(b));
+
+/* ---- Categorized exercise picker with live search ---- */
+let exPickerPanel = null;
+let exPickerInput = null;
+let exPickerActiveIdx = -1;
+
+function initExercisePicker(){
+  exPickerPanel = document.createElement("div");
+  exPickerPanel.className = "ex-picker-panel";
+  document.body.appendChild(exPickerPanel);
+
+  // keep clicks on the panel from blurring the input before we handle them
+  exPickerPanel.addEventListener("mousedown", e=>e.preventDefault());
+  exPickerPanel.addEventListener("click", e=>{
+    const item = e.target.closest(".ex-picker-item");
+    if(!item || !exPickerInput) return;
+    exPickerInput.value = item.dataset.name;
+    exPickerInput.dispatchEvent(new Event("change", {bubbles:true}));
+    hideExPicker();
+  });
+
+  document.addEventListener("focusin", e=>{
+    if(e.target.classList && e.target.classList.contains("ex-name-input")){
+      exPickerInput = e.target;
+      renderExPicker(e.target.value);
+      showExPicker();
+    }
+  });
+  document.addEventListener("focusout", e=>{
+    if(e.target === exPickerInput){
+      // slight delay so panel clicks land first (mousedown preventDefault covers mouse; this covers touch quirks)
+      setTimeout(()=>{ if(document.activeElement !== exPickerInput) hideExPicker(); }, 120);
+    }
+  });
+  document.addEventListener("input", e=>{
+    if(e.target === exPickerInput){
+      renderExPicker(e.target.value);
+      showExPicker();
+    }
+  });
+  document.addEventListener("keydown", e=>{
+    if(!exPickerInput || exPickerPanel.style.display !== "block") return;
+    if(e.target !== exPickerInput) return;
+    const items = exPickerPanel.querySelectorAll(".ex-picker-item");
+    if(e.key === "ArrowDown"){
+      e.preventDefault();
+      exPickerActiveIdx = Math.min(exPickerActiveIdx + 1, items.length - 1);
+      updateExPickerActive(items);
+    } else if(e.key === "ArrowUp"){
+      e.preventDefault();
+      exPickerActiveIdx = Math.max(exPickerActiveIdx - 1, 0);
+      updateExPickerActive(items);
+    } else if(e.key === "Enter"){
+      if(exPickerActiveIdx >= 0 && items[exPickerActiveIdx]){
+        e.preventDefault();
+        exPickerInput.value = items[exPickerActiveIdx].dataset.name;
+        exPickerInput.dispatchEvent(new Event("change", {bubbles:true}));
+        hideExPicker();
+      }
+    } else if(e.key === "Escape"){
+      hideExPicker();
+    }
+  });
+  window.addEventListener("scroll", positionExPicker, true);
+  window.addEventListener("resize", positionExPicker);
+}
+
+function updateExPickerActive(items){
+  items.forEach((el,i)=>el.classList.toggle("active", i === exPickerActiveIdx));
+  if(items[exPickerActiveIdx]) items[exPickerActiveIdx].scrollIntoView({block:"nearest"});
+}
+
+function highlightMatch(name, query){
+  if(!query) return escapeAttr(name);
+  const idx = name.toLowerCase().indexOf(query.toLowerCase());
+  if(idx === -1) return escapeAttr(name);
+  return escapeAttr(name.slice(0,idx)) + "<b>" + escapeAttr(name.slice(idx, idx+query.length)) + "</b>" + escapeAttr(name.slice(idx+query.length));
+}
+
+function renderExPicker(query){
+  exPickerActiveIdx = -1;
+  const q = (query||"").trim().toLowerCase();
+  let out = "";
+  let any = false;
+  for(const [cat, items] of Object.entries(EXERCISE_CATEGORIES)){
+    const matches = q
+      ? items.filter(n => n.toLowerCase().includes(q) || cat.toLowerCase().includes(q))
+      : items;
+    if(!matches.length) continue;
+    any = true;
+    out += `<div class="ex-picker-cat">${escapeAttr(cat)}</div>`;
+    out += matches.map(n=>`<div class="ex-picker-item" data-name="${escapeAttr(n)}">${highlightMatch(n, q)}</div>`).join("");
+  }
+  exPickerPanel.innerHTML = any ? out : `<div class="ex-picker-empty">No matches — press Enter to use what you typed</div>`;
+}
+
+function showExPicker(){
+  exPickerPanel.style.display = "block";
+  positionExPicker();
+}
+
+function hideExPicker(){
+  exPickerPanel.style.display = "none";
+  exPickerActiveIdx = -1;
+}
+
+function positionExPicker(){
+  if(!exPickerInput || exPickerPanel.style.display !== "block") return;
+  if(!document.body.contains(exPickerInput)){ hideExPicker(); return; }
+  const r = exPickerInput.getBoundingClientRect();
+  const panelMax = 320;
+  const below = window.innerHeight - r.bottom;
+  exPickerPanel.style.left = (r.left + window.scrollX) + "px";
+  exPickerPanel.style.width = r.width + "px";
+  if(below < 200 && r.top > below){
+    // open upward
+    exPickerPanel.style.maxHeight = Math.min(panelMax, r.top - 8) + "px";
+    exPickerPanel.style.top = (r.top + window.scrollY - Math.min(exPickerPanel.offsetHeight, Math.min(panelMax, r.top - 8))) + "px";
+  } else {
+    exPickerPanel.style.maxHeight = Math.min(panelMax, below - 8) + "px";
+    exPickerPanel.style.top = (r.bottom + window.scrollY + 2) + "px";
+  }
+}
 
 let editingDayId = null;
 let showAllDays = false;
@@ -1424,7 +1657,7 @@ function escapeAttr(str){
 
 function buildExerciseRow(name, detail, rowId){
   return `<div class="edit-ex-row" data-row-id="${rowId}">
-    <input type="text" class="edit-input ex-name-input" list="exercise-library" placeholder="Exercise name (type or pick from list)" value="${escapeAttr(name)}">
+    <input type="text" class="edit-input ex-name-input" autocomplete="off" placeholder="Exercise name (type to search or pick from list)" value="${escapeAttr(name)}">
     <input type="text" class="edit-input ex-detail-input" placeholder="Sets / reps / detail" value="${escapeAttr(detail)}">
     <button type="button" class="edit-remove-btn" title="Remove exercise">&times;</button>
   </div>`;
@@ -2441,8 +2674,7 @@ document.getElementById("resetBtn").addEventListener("click", async ()=>{
 });
 
 (async ()=>{
-  document.getElementById("exercise-library").innerHTML =
-    EXERCISE_LIBRARY.map(name=>`<option value="${escapeAttr(name)}"></option>`).join("");
+  initExercisePicker();
   await loadDaysConfig();
   await loadHistory();
   await loadState();
