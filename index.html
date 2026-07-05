@@ -187,9 +187,37 @@
     font-family:'Source Sans 3', sans-serif;
     -webkit-overflow-scrolling:touch;
   }
-  .ex-picker-cat{
+  .ex-picker-chips{
     position:sticky;
     top:0;
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    background:#FFFDF7;
+    padding:8px 10px;
+    border-bottom:1px solid var(--parchment-line);
+    z-index:2;
+  }
+  .ex-picker-chip{
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.03em;
+    padding:4px 9px;
+    border-radius:999px;
+    border:1px solid var(--parchment-line);
+    color:var(--olive);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .ex-picker-chip:hover{border-color:var(--olive);}
+  .ex-picker-chip.active{
+    background:var(--forest);
+    border-color:var(--forest);
+    color:#fff;
+  }
+  .ex-picker-cat{
+    position:sticky;
+    top:40px;
     background:var(--parchment);
     color:var(--olive);
     font-size:11px;
@@ -767,6 +795,19 @@
   @media (max-width:520px){
     .stats-bar{grid-template-columns:repeat(3,1fr);}
   }
+  .stats-heading{
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--olive);
+    font-weight:700;
+    margin:0 0 6px;
+  }
+  .stats-bar-total{grid-template-columns:repeat(4, 1fr);}
+  .stats-bar-total .stat-num{font-size:19px;}
+  @media (max-width:520px){
+    .stats-bar-total{grid-template-columns:repeat(2,1fr);}
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -797,7 +838,10 @@ const db = {
     <div class="sub">Tap a day to open it, check off exercises as you go, and mark the day complete, skipped, or rested. Your marks are saved automatically.</div>
   </header>
 
+  <div class="stats-heading">This Week</div>
   <div class="stats-bar" id="statsBar"></div>
+  <div class="stats-heading">All-Time Total</div>
+  <div class="stats-bar stats-bar-total" id="statsBarTotal"></div>
 
   <div class="profile">
     <div class="profile-label">Week at a glance</div>
@@ -1438,6 +1482,7 @@ const EXERCISE_LIBRARY = Object.values(EXERCISE_CATEGORIES).flat()
 let exPickerPanel = null;
 let exPickerInput = null;
 let exPickerActiveIdx = -1;
+let exPickerActiveCat = null;
 
 function initExercisePicker(){
   exPickerPanel = document.createElement("div");
@@ -1447,6 +1492,13 @@ function initExercisePicker(){
   // keep clicks on the panel from blurring the input before we handle them
   exPickerPanel.addEventListener("mousedown", e=>e.preventDefault());
   exPickerPanel.addEventListener("click", e=>{
+    const chip = e.target.closest(".ex-picker-chip");
+    if(chip){
+      const cat = chip.dataset.cat;
+      exPickerActiveCat = (exPickerActiveCat === cat) ? null : cat;
+      renderExPicker(exPickerInput ? exPickerInput.value : "");
+      return;
+    }
     const item = e.target.closest(".ex-picker-item");
     if(!item || !exPickerInput) return;
     exPickerInput.value = item.dataset.name;
@@ -1457,6 +1509,7 @@ function initExercisePicker(){
   document.addEventListener("focusin", e=>{
     if(e.target.classList && e.target.classList.contains("ex-name-input")){
       exPickerInput = e.target;
+      exPickerActiveCat = null;
       renderExPicker(e.target.value);
       showExPicker();
     }
@@ -1515,9 +1568,16 @@ function highlightMatch(name, query){
 function renderExPicker(query){
   exPickerActiveIdx = -1;
   const q = (query||"").trim().toLowerCase();
+  const cats = Object.keys(EXERCISE_CATEGORIES);
+
+  const chipsHtml = `<div class="ex-picker-chips">` +
+    cats.map(cat=>`<div class="ex-picker-chip${cat===exPickerActiveCat?' active':''}" data-cat="${escapeAttr(cat)}">${escapeAttr(cat)}</div>`).join("") +
+    `</div>`;
+
   let out = "";
   let any = false;
   for(const [cat, items] of Object.entries(EXERCISE_CATEGORIES)){
+    if(exPickerActiveCat && cat !== exPickerActiveCat) continue;
     const matches = q
       ? items.filter(n => n.toLowerCase().includes(q) || cat.toLowerCase().includes(q))
       : items;
@@ -1526,7 +1586,7 @@ function renderExPicker(query){
     out += `<div class="ex-picker-cat">${escapeAttr(cat)}</div>`;
     out += matches.map(n=>`<div class="ex-picker-item" data-name="${escapeAttr(n)}">${highlightMatch(n, q)}</div>`).join("");
   }
-  exPickerPanel.innerHTML = any ? out : `<div class="ex-picker-empty">No matches — press Enter to use what you typed</div>`;
+  exPickerPanel.innerHTML = chipsHtml + (any ? out : `<div class="ex-picker-empty">No matches — press Enter to use what you typed</div>`);
 }
 
 function showExPicker(){
@@ -1596,6 +1656,15 @@ function showPrompt(message, defaultValue){
 }
 function showConfirm(message){
   return openModal({message, withInput:false});
+}
+function showExercisePrompt(message, defaultValue){
+  const input = document.getElementById("modalInput");
+  input.classList.add("ex-name-input");
+  return openModal({message, withInput:true, defaultValue}).then(result=>{
+    input.classList.remove("ex-name-input");
+    hideExPicker();
+    return result;
+  });
 }
 
 function parseGoal(detail){
@@ -2073,7 +2142,7 @@ function render(){
     btn.addEventListener("click", async (e)=>{
       e.stopPropagation();
       const day = btn.dataset.day;
-      const name = await showPrompt("Exercise name (or pick from the dropdown next time)");
+      const name = await showExercisePrompt("Exercise name (type to search)");
       if(!name || !name.trim()) return;
       if(!state[day].extras) state[day].extras = [];
       state[day].extras.push({name:name.trim(), detail:"", checked:false});
@@ -2279,6 +2348,50 @@ function renderStats(){
     <div class="stat">
       <div class="stat-num" style="color:var(--upcoming)">${rawUpcoming}</div>
       <div class="stat-label">Upcoming</div>
+    </div>
+  `;
+
+  renderTotalStats();
+}
+
+function renderTotalStats(){
+  let rawCompleted=0, rawSubstituted=0, rawSkipped=0, restDays=0;
+
+  allWeeks().forEach(w=>{
+    w.days.forEach(d=>{
+      const dayState = w.state[d.id];
+      if(!dayState) return;
+      const isRestDay = !!d.isRest;
+      if(dayState.status==="completed"){
+        if(isRestDay) restDays++;
+        rawCompleted++;
+      } else if(dayState.status==="substituted"){
+        rawSubstituted++;
+      } else if(dayState.status==="skipped"){
+        rawSkipped++;
+      }
+    });
+  });
+
+  const totalCompleted = rawCompleted + rawSubstituted;
+
+  const bar = document.getElementById("statsBarTotal");
+  bar.innerHTML = `
+    <div class="stat">
+      <div class="stat-num" style="color:var(--ok)">${totalCompleted}</div>
+      <div class="stat-label">Completed<br>(incl. substituted)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:var(--substituted-accent)">${rawSubstituted}</div>
+      <div class="stat-label">Substituted</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:var(--skip)">${rawSkipped}</div>
+      <div class="stat-label">Skipped</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:var(--olive)">${restDays}</div>
+      <div class="stat-label">Rest Days</div>
     </div>
   `;
 }
